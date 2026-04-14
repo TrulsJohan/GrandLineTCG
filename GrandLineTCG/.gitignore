@@ -1,0 +1,63 @@
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.sln.cache
+*.sdf
+*.opensdf
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+*.DotSettings.user
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+**/packages.lock.json
+
+# Test results
+**/TestResults/
+*.trx
+*.coverage
+coverage/
+
+# Logs and temporary files
+*.log
+logs/
+temp/
+tmp/
+
+# User-specific data
+*.usersecrets.json
+secrets.json
+
+# Optional: Data files (if you add persistence later)
+# Only uncomment if you want to ignore your JSON/SQLite files
+# *.json
+# *.db
+# *.sqlite
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Backup files
+*.bak
+*.tmp
+*~
+
+# Published output (if you ever publish the app)
+**/publish/
+**/AppPackages/
