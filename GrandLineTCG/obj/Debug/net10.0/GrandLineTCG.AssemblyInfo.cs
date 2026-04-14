@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GrandLineTCG")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9286c6bbe1a43e2efcc902df1e9a19e881caaa69")]
 [assembly: System.Reflection.AssemblyProductAttribute("GrandLineTCG")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GrandLineTCG")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
