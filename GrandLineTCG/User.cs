@@ -10,9 +10,9 @@ public class User
     
     public DateTime AccountCreated { get; set; } = DateTime.Now;
 
-    public List<Events> Host { get; set; } = new();
+    public List<Tournament> Host { get; set; } = new();
    
-    public List<Events> Attending { get; set; } = new();
+    public List<Tournament> Attending { get; set; } = new();
 
     public List<Booking> Purchases { get; set; } = new();
     
