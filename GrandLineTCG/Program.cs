@@ -1,9 +1,5 @@
-﻿namespace GrandLineTCG;
+﻿using GrandLineTCG;
 
-class Program
-{
-    static void Main(string[] args)
-    {
-        Console.WriteLine("Hello, World!");
-    }
-}
+var controller = new Controller();
+var ui = new UI(controller);
+ui.Run();
