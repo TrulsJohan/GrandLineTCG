@@ -45,6 +45,17 @@ public class UI
             Console.WriteLine($"This field can not be empty.");
         }
     }
+    
+    private T ReadEnum<T>(string prompt) where T : struct, Enum
+    {
+        var values =  Enum.GetValues<T>();
+        Console.WriteLine(prompt);
+        for (int i = 0; i < values.Length; i++)
+            Console.WriteLine($"{i + 1} . {values[i]}");
+        
+        int choice = ReadIntInRange("Select: ", 1, values.Length);
+        return values[choice - 1];
+    }
 
     private void ShowGuestMenu()
     {
@@ -67,7 +78,7 @@ public class UI
 
     private void ShowMainMenu()
     {
-        Console.WriteLine("1. Create Tournament");
+        Console.WriteLine("1. Create Event");
         Console.WriteLine("2. Exit");
         int choice = ReadIntInRange("Select an option: ", 1, 3);
         switch (choice)
@@ -117,6 +128,27 @@ public class UI
 
     private void HandleCreateEvent()
     {
-        
+        string title = ReadRequiredString("Title: ");
+        string description = ReadRequiredString("Description: ");
+        string location = ReadRequiredString("Location: ");
+        int price = ReadIntInRange("Price: ", 0, int.MaxValue);
+        ListingType gameTypes = ReadEnum<ListingType>("Game Types: ");
+        TournamentType tournamentType = ReadEnum<TournamentType>("Tournament Type: ");
+        PrizeType prizeType = ReadEnum<PrizeType>("Prize Type: ");
+        Ruleset ruleset = ReadEnum<Ruleset>("Ruleset: ");
+        MaxParticipants maxParticipants = ReadEnum<MaxParticipants>("Max Participants: ");
+
+        var tournament = _controller.CreateTournament(
+            _currentUser!, 
+            title, 
+            description, 
+            location, 
+            price,  
+            gameTypes, 
+            tournamentType, 
+            prizeType, 
+            ruleset, 
+            maxParticipants);
+        Console.WriteLine("Tournament created successfully.");
     }
 }

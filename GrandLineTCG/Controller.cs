@@ -3,6 +3,7 @@ namespace GrandLineTCG;
 public class Controller
 {
     private readonly List<User> _users = new ();
+    private readonly List<Tournament> _tournaments = new();
     
     public User Register(string username, string password)
     {
@@ -22,5 +23,33 @@ public class Controller
             throw new InvalidOperationException("invalid username or password");
         
         return user;
+    }
+
+    public Tournament CreateTournament(
+        User host,
+        string title, 
+        string description, 
+        string location, 
+        int price,  
+        ListingType gameTypes, 
+        TournamentType tournamentType, 
+        PrizeType prizeType, 
+        Ruleset ruleset, 
+        MaxParticipants maxParticipants)
+    {
+        var tournament = new Tournament(
+            host,
+            title,
+            description,
+            location,
+            price,
+            gameTypes,
+            tournamentType,
+            prizeType,
+            ruleset,
+            maxParticipants);
+        host.Host.Add(tournament);
+        _tournaments.Add(tournament);
+        return tournament;
     }
 }
