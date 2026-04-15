@@ -6,8 +6,8 @@ public class Tournament
     public string Title { get; set; } = String.Empty;
     public string Description { get; set; } = String.Empty;
     public ListingType GameType { get; set; }
-    public List<Participant> Participants { get; set; } = new List<Participant>();
-    public int ParticipantsCount => Participants.Count;
+    // public List<Participant> Participants { get; set; } = new List<Participant>();
+    // public int ParticipantsCount => Participants.Count;
     public string Location { get; set; } = String.Empty;
     public decimal Prize { get; set; }
     public DateTime StartDate { get; set; }
