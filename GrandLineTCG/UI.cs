@@ -79,12 +79,14 @@ public class UI
     private void ShowMainMenu()
     {
         Console.WriteLine("1. Create Event");
-        Console.WriteLine("2. Exit");
+        Console.WriteLine("2. View Profile");
+        Console.WriteLine("3. Exit");
         int choice = ReadIntInRange("Select an option: ", 1, 3);
         switch (choice)
         {
             case 1: HandleCreateEvent(); break;
-            case 2:
+            case 2: HandleProfile(); break;
+            case 3:
                 Console.WriteLine("Goodbye!");
                 Environment.Exit(0);
                 break;
@@ -150,5 +152,11 @@ public class UI
             ruleset, 
             maxParticipants);
         Console.WriteLine("Tournament created successfully.");
+    }
+
+    private void HandleProfile()
+    {
+        var profile = new Profile();
+        profile.Display(_currentUser!);
     }
 }
