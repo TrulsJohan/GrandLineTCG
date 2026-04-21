@@ -163,6 +163,9 @@ public class UI
         profile.Display(_currentUser!);
     }
 
+    
+    //browsing, searching and sorting tournaments
+    
     private void HandleBrowseTournaments()
     {
         Console.WriteLine("1. Browse All Listings");
@@ -170,19 +173,40 @@ public class UI
 
         int choice = ReadIntInRange("Select an option: ", 1, 2);
 
-        List<Tournament> tournaments;
-        if (choice == 1)
+        List<Tournament> tournaments = _controller.GetAllTournaments();
+        if (choice == 2)
         {
-            tournaments = _controller.GetAllTournaments();
-        }
-        else
-        {
-            tournaments = _controller.GetAllTournaments();
-            Console.WriteLine("coming soon");
+            tournaments = HandleFilterTournaments(tournaments);
         }
 
         ShowTournamentsTable(tournaments);
     }
+    
+    private List<Tournament> HandleFilterTournaments(List<Tournament> tournaments)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Filter by:");
+        Console.WriteLine("1. Game type");
+        Console.WriteLine("2. Tournament type");
+        Console.WriteLine("3. Status");
+        Console.WriteLine("4. Prize type");
+        Console.WriteLine("5. Ruleset");
+        Console.WriteLine("6. Max participants");
+
+        int choice = ReadIntInRange("Select an option: ", 1, 6);
+
+        return choice switch
+        {
+            1 => tournaments.Where(t => t.GameType   == ReadEnum<ListingType>("Select game type:")).ToList(),
+            2 => tournaments.Where(t => t.Type       == ReadEnum<TournamentType>("Select tournament type:")).ToList(),
+            3 => tournaments.Where(t => t.Status     == ReadEnum<EventStatus>("Select status:")).ToList(),
+            4 => tournaments.Where(t => t.PrizeType  == ReadEnum<PrizeType>("Select prize type:")).ToList(),
+            5 => tournaments.Where(t => t.Ruleset    == ReadEnum<Ruleset>("Select ruleset:")).ToList(),
+            6 => tournaments.Where(t =>t.MaxParticipants == ReadEnum<MaxParticipants>("Select Max Participants:")).ToList()
+        };
+    }
+    
+    //display tournaments list and single tournament
 
     private void ShowTournamentsTable(List<Tournament> tournaments)
     {
