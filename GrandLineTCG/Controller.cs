@@ -52,4 +52,13 @@ public class Controller
         _tournaments.Add(tournament);
         return tournament;
     }
+    
+    // browse, search and sort listings
+
+    public List<Tournament> GetAllTournaments()
+    {
+        return _tournaments
+            .Where(t => t.Status == EventStatus.Upcoming)
+            .ToList();
+    }
 }

@@ -7,6 +7,7 @@ public class UI
 {
     private readonly Controller _controller;
     private User? _currentUser;
+
     public UI(Controller controller)
     {
         _controller = controller;
@@ -33,7 +34,7 @@ public class UI
             Console.WriteLine($"Please enter a valid number between {min} and {max}.");
         }
     }
-    
+
     private string ReadRequiredString(string prompt)
     {
         while (true)
@@ -45,14 +46,14 @@ public class UI
             Console.WriteLine($"This field can not be empty.");
         }
     }
-    
+
     private T ReadEnum<T>(string prompt) where T : struct, Enum
     {
-        var values =  Enum.GetValues<T>();
+        var values = Enum.GetValues<T>();
         Console.WriteLine(prompt);
         for (int i = 0; i < values.Length; i++)
             Console.WriteLine($"{i + 1} . {values[i]}");
-        
+
         int choice = ReadIntInRange("Select: ", 1, values.Length);
         return values[choice - 1];
     }
@@ -62,7 +63,7 @@ public class UI
         Console.WriteLine("1. Register");
         Console.WriteLine("2. Login");
         Console.WriteLine("3. Exit");
-        
+
         int choice = ReadIntInRange("Select an option: ", 1, 3);
         switch (choice)
         {
@@ -73,20 +74,22 @@ public class UI
                 Environment.Exit(0);
                 break;
         }
-        
+
     }
 
     private void ShowMainMenu()
     {
         Console.WriteLine("1. Create Event");
-        Console.WriteLine("2. View Profile");
-        Console.WriteLine("3. Exit");
+        Console.WriteLine("2. Browse Events");
+        Console.WriteLine("3. View Profile");
+        Console.WriteLine("4. Exit");
         int choice = ReadIntInRange("Select an option: ", 1, 3);
         switch (choice)
         {
             case 1: HandleCreateEvent(); break;
-            case 2: HandleProfile(); break;
-            case 3:
+            case 2: HandleBrowseTournaments(); break;
+            case 3: HandleProfile(); break;
+            case 4:
                 Console.WriteLine("Goodbye!");
                 Environment.Exit(0);
                 break;
@@ -141,15 +144,15 @@ public class UI
         MaxParticipants maxParticipants = ReadEnum<MaxParticipants>("Max Participants: ");
 
         var tournament = _controller.CreateTournament(
-            _currentUser!, 
-            title, 
-            description, 
-            location, 
-            price,  
-            gameTypes, 
-            tournamentType, 
-            prizeType, 
-            ruleset, 
+            _currentUser!,
+            title,
+            description,
+            location,
+            price,
+            gameTypes,
+            tournamentType,
+            prizeType,
+            ruleset,
             maxParticipants);
         Console.WriteLine("Tournament created successfully.");
     }
@@ -158,5 +161,90 @@ public class UI
     {
         var profile = new Profile();
         profile.Display(_currentUser!);
+    }
+
+    private void HandleBrowseTournaments()
+    {
+        Console.WriteLine("1. Browse All Listings");
+        Console.WriteLine("2. Filter By Category");
+
+        int choice = ReadIntInRange("Select an option: ", 1, 2);
+
+        List<Tournament> tournaments;
+        if (choice == 1)
+        {
+            tournaments = _controller.GetAllTournaments();
+        }
+        else
+        {
+            tournaments = _controller.GetAllTournaments();
+            Console.WriteLine("coming soon");
+        }
+
+        ShowTournamentsTable(tournaments);
+    }
+
+    private void ShowTournamentsTable(List<Tournament> tournaments)
+    {
+        if (tournaments.Count == 0)
+        {
+            Console.WriteLine("There are no tournaments in the list.");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine(
+            $"{"#",4} {"Title",-25} {"Host",-15} {"Location",-15} {"Type",-14} {"Status",-12} {"Prize",8}");
+        Console.WriteLine(new string('-', 97));
+
+        for (int i = 0; i < tournaments.Count; i++)
+        {
+            var t = tournaments[i];
+            string prize = t.PrizeType == PrizeType.Cash ? $"{t.Prize:N0} kr" : t.PrizeType.ToString();
+            Console.WriteLine(
+                $"{i + 1,-4} {t.Title,-25} {t.Host.Username,-15} {t.Location,-15} {t.Type,-14} {t.Status,-12} {prize,8}");
+        }
+
+        Console.WriteLine();
+        int choice = ReadIntInRange("Select a listing to view (press 0 to go back): ", 0, tournaments.Count);
+        if (choice == 0)
+        {
+            Console.WriteLine("No listings found!");
+            return;
+        }
+
+        ShowTournamentDetails(tournaments[choice - 1]);
+    }
+    
+    private void ShowTournamentDetails(Tournament tournament)
+    {
+        Console.WriteLine($"Title:        {tournament.Title}");
+        Console.WriteLine($"Host:         {tournament.Host.Username}");
+        Console.WriteLine($"Location:     {tournament.Location}");
+        Console.WriteLine($"Type:         {tournament.Type}");
+        Console.WriteLine($"Game:         {tournament.GameType}");
+        Console.WriteLine($"Ruleset:      {tournament.Ruleset}");
+        Console.WriteLine($"Status:       {tournament.Status}");
+        Console.WriteLine($"Prize:        {tournament.Prize:N0} kr ({tournament.PrizeType})");
+        Console.WriteLine($"Max players:  {tournament.MaxParticipants}");
+        Console.WriteLine($"Description:  {tournament.Description}");
+        Console.WriteLine();
+
+        bool isOwnTournament = tournament.Host.Username == _currentUser!.Username;
+        if (isOwnTournament)
+        {
+            Console.WriteLine("1. Cancel tournament");
+            Console.WriteLine("2. Go back");
+            int choice = ReadIntInRange("Select an option: ", 1, 2);
+            if (choice == 1)
+                // remove event Here
+            return;
+        }
+
+        Console.WriteLine("1. Join tournament");
+        Console.WriteLine("2. Go back");
+        int joinChoice = ReadIntInRange("Select an option: ", 1, 2);
+        if (joinChoice == 1)
+            // Book tournament here
+            Console.WriteLine("booking complete");
     }
 }
