@@ -62,5 +62,14 @@ public class Controller
             .ToList();
     }
     
+    public List<Tournament> SearchTournaments(string searchTerm)
+    {
+        var lower = searchTerm.ToLower();
+        return _tournaments
+            .Where(t => t.Status == EventStatus.Upcoming &&
+                        (t.Title.ToLower().Contains(lower) || 
+                         t.Description.ToLower().Contains(lower)))
+            .ToList();
+    }
     
 }
