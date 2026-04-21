@@ -81,15 +81,17 @@ public class UI
     {
         Console.WriteLine("1. Create Event");
         Console.WriteLine("2. Browse Events");
-        Console.WriteLine("3. View Profile");
-        Console.WriteLine("4. Exit");
-        int choice = ReadIntInRange("Select an option: ", 1, 3);
+        Console.WriteLine("3. Search Events");
+        Console.WriteLine("4. View Profile");
+        Console.WriteLine("5. Exit");
+        int choice = ReadIntInRange("Select an option: ", 1, 4);
         switch (choice)
         {
             case 1: HandleCreateEvent(); break;
             case 2: HandleBrowseTournaments(); break;
-            case 3: HandleProfile(); break;
-            case 4:
+            case 3: HandleSearchTournaments(); break;
+            case 4: HandleProfile(); break;
+            case 5:     
                 Console.WriteLine("Goodbye!");
                 Environment.Exit(0);
                 break;
@@ -270,5 +272,14 @@ public class UI
         if (joinChoice == 1)
             // Book tournament here
             Console.WriteLine("booking complete");
+    }
+    
+    private void HandleSearchTournaments()
+    {
+        Console.WriteLine("Search listings");
+        string searchTerm = ReadRequiredString("Search Term: ");
+        
+        var tournaments = _controller.SearchTournaments(searchTerm);
+        ShowTournamentsTable(tournaments);
     }
 }
