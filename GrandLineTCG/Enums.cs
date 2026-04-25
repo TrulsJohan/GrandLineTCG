@@ -20,6 +20,12 @@ public enum TournamentType
 
 public enum BookingStatus
 {
+    Confirmed,
+    Cancelled,
+}
+
+public enum SlotStatus
+{
     Available,
     FullyBooked,
     Closed
