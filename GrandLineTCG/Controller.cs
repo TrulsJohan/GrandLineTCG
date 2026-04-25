@@ -71,5 +71,25 @@ public class Controller
                          t.Description.ToLower().Contains(lower)))
             .ToList();
     }
+
+    public Booking BookTournament(User user, Tournament tournament)
+    {
+        if (tournament.Host == user)
+            throw new InvalidOperationException("You cannot book your own tournament.");
+
+        if (tournament.IsFull)
+            throw new InvalidOperationException("The tournament is full.");
+
+        if (tournament.Participants.Contains(user))
+            throw new InvalidOperationException("You are already booked to this tournament.");
+        
+        tournament.AddParticipant(user);
+        tournament.UpdateStatus();
+
+        var booking = new Booking(user, tournament, tournament.Prize);
+        user.Purchases.Add(booking);
+        user.Attending.Add(tournament);
+        return booking;
+    }
     
 }
