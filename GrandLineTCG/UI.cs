@@ -84,7 +84,8 @@ public class UI
         Console.WriteLine("3. Search Events");
         Console.WriteLine("4. View Profile");
         Console.WriteLine("5. Exit");
-        int choice = ReadIntInRange("Select an option: ", 1, 4);
+        Console.WriteLine("6. Log Out");
+        int choice = ReadIntInRange("Select an option: ", 1, 6);
         switch (choice)
         {
             case 1: HandleCreateEvent(); break;
@@ -95,6 +96,7 @@ public class UI
                 Console.WriteLine("Goodbye!");
                 Environment.Exit(0);
                 break;
+            case 6: _currentUser = null; break;
         }
     }
 
@@ -251,7 +253,9 @@ public class UI
         Console.WriteLine($"Ruleset:      {tournament.Ruleset}");
         Console.WriteLine($"Status:       {tournament.Status}");
         Console.WriteLine($"Prize:        {tournament.Prize:N0} kr ({tournament.PrizeType})");
-        Console.WriteLine($"Max players:  {tournament.MaxParticipants}");
+        Console.WriteLine($"Max players:  {(int)tournament.MaxParticipants}");
+        Console.WriteLine($"Participants: {tournament.ParticipantsCount}/{(int)tournament.MaxParticipants}");
+        Console.WriteLine($"Slots:        {tournament.SlotStatus}");
         Console.WriteLine($"Description:  {tournament.Description}");
         Console.WriteLine();
 
