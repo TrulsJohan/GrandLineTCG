@@ -14,8 +14,10 @@ public class Tournament
     public PrizeType PrizeType { get; set; }
     public Ruleset Ruleset { get; set; }
     public MaxParticipants MaxParticipants { get; set; }
-    // public List<User> Participants { get; set; } = new List<User>();
-    // public int ParticipantsCount => Participants.Count;
+    public List<User> Participants { get; set; } = new List<User>();
+    public int ParticipantsCount => Participants.Count;
+    public bool IsFull => Participants.Count >= (int)MaxParticipants;
+    public SlotStatus SlotStatus => IsFull ? SlotStatus.FullyBooked : SlotStatus.Available;
 
     public Tournament(
         User host,
