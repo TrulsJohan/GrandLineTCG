@@ -91,5 +91,29 @@ public class Controller
         user.Attending.Add(tournament);
         return booking;
     }
+
+    public void CancelBooking(User user, Booking booking)
+    {
+        if (booking.Participant != user)
+            throw new InvalidOperationException("You can only cancel your own bookings.");
+        
+        booking.Cancel();
+        booking.Tournament.RemoveParticipant(user);
+        booking.Tournament.UpdateStatus();
+        user.Attending.Remove(booking.Tournament);
+    }
+
+    public void CancelTournament(User user, Tournament tournament)
+    {
+        if (tournament.Host != user)
+            throw new InvalidOperationException("You can only cancel your tournaments.");
+        
+        tournament.Status = EventStatus.Cancelled;
+
+        foreach (var participant in tournament.Participants)
+            participant.Attending.Remove(tournament);
+        
+        tournament.Participants.Clear();
+    }
     
 }
