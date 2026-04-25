@@ -262,7 +262,7 @@ public class UI
             Console.WriteLine("2. Go back");
             int choice = ReadIntInRange("Select an option: ", 1, 2);
             if (choice == 1)
-                // remove event Here
+                _controller.CancelTournament(_currentUser!, tournament);
             return;
         }
 
@@ -270,8 +270,20 @@ public class UI
         Console.WriteLine("2. Go back");
         int joinChoice = ReadIntInRange("Select an option: ", 1, 2);
         if (joinChoice == 1)
-            // Book tournament here
-            Console.WriteLine("booking complete");
+        {
+            try
+            {
+                var booking = _controller.BookTournament(_currentUser!, tournament);
+                Console.WriteLine("Booking complete");
+                Console.WriteLine($"Reference: {booking.Reference}");
+                Console.WriteLine($"Price: {booking.PriceAtBooking:N0} kr");
+                Console.WriteLine($"Booked: {booking.BookedAt:dd MMM yyyy}");
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine($"Booking failed: {e.Message}");
+            }
+        }
     }
     
     private void HandleSearchTournaments()
