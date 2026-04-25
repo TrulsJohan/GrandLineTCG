@@ -45,4 +45,22 @@ public class Tournament
         Ruleset = Ruleset.Regular;
         PrizeType = PrizeType.Products;
     }
+
+    public bool AddParticipant(User user)
+    {
+        if (IsFull) return false;
+        Participants.Add(user);
+        return true;
+    }
+
+    public void RemoveParticipant(User user)
+    {
+        Participants.Remove(user);
+    }
+
+    public void UpdateStatus()
+    {
+        if (Status == EventStatus.Cancelled) return;
+        Status = IsFull ? EventStatus.InProgress : EventStatus.Upcoming;
+    }
 }
