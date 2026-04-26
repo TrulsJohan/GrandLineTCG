@@ -1,0 +1,77 @@
+namespace GrandLineTCG;
+
+public class Tournament
+{
+    public Guid Id { get; set; }  = Guid.NewGuid();
+    public User Host { get; set; }
+    public string Title { get; set; } = String.Empty;
+    public string Description { get; set; } = String.Empty;
+    public string Location { get; set; } = String.Empty;
+    public decimal Prize { get; set; }
+    public ListingType GameType { get; set; }
+    public TournamentType Type { get; set; }
+    public EventStatus Status { get; set; }
+    public PrizeType PrizeType { get; set; }
+    public Ruleset Ruleset { get; set; }
+    public MaxParticipants MaxParticipants { get; set; }
+    public List<User> Participants { get; set; } = new List<User>();
+    public int ParticipantsCount => Participants.Count;
+    public bool IsFull => Participants.Count >= (int)MaxParticipants;
+    public SlotStatus SlotStatus => IsFull ? SlotStatus.FullyBooked : SlotStatus.Available;
+    public List<Review> Reviews { get; set; } = new();
+    public double AverageRating => Reviews.Count == 0 ? 0 : Reviews.Average(r => r.Rating);
+    public DateTime EventDate { get; set; }
+
+    public Tournament(
+        User host,
+        string title,
+        string description,
+        string location,
+        int price,
+        ListingType gameType,
+        TournamentType tournamentType,
+        PrizeType prizeType,
+        Ruleset ruleset,
+        MaxParticipants maxParticipants,
+        DateTime eventDate)
+    {
+        Host = host;
+        Title = title;
+        Description = description;
+        Location = location;
+        Prize = price;
+        GameType = gameType;
+        Type = tournamentType;
+        PrizeType = prizeType;
+        Ruleset = ruleset;
+        MaxParticipants = maxParticipants;
+        EventDate = eventDate;
+        Status = EventStatus.Upcoming;
+    }
+
+    public bool AddParticipant(User user)
+    {
+        if (IsFull) return false;
+        Participants.Add(user);
+        return true;
+    }
+
+    public void RemoveParticipant(User user)
+    {
+        Participants.Remove(user);
+    }
+
+    public void UpdateStatus()
+    {
+        if (Status == EventStatus.Cancelled || Status == EventStatus.Postponed)
+            return;
+
+        if (DateTime.Now >= EventDate)
+        {
+            Status = EventStatus.Completed;
+            return;
+        }
+
+        Status = IsFull ? EventStatus.InProgress : EventStatus.Upcoming;
+    }
+}
