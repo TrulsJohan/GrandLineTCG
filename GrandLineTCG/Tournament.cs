@@ -18,6 +18,9 @@ public class Tournament
     public int ParticipantsCount => Participants.Count;
     public bool IsFull => Participants.Count >= (int)MaxParticipants;
     public SlotStatus SlotStatus => IsFull ? SlotStatus.FullyBooked : SlotStatus.Available;
+    public List<Review> Reviews { get; set; } = new();
+    public double AverageRating => Reviews.Count == 0 ? 0 : Reviews.Average(r => r.Rating);
+    public DateTime EventDate { get; set; }
 
     public Tournament(
         User host,
@@ -29,7 +32,8 @@ public class Tournament
         TournamentType tournamentType,
         PrizeType prizeType,
         Ruleset ruleset,
-        MaxParticipants maxParticipants)
+        MaxParticipants maxParticipants,
+        DateTime eventDate)
     {
         Host = host;
         Title = title;
@@ -41,6 +45,7 @@ public class Tournament
         PrizeType = prizeType;
         Ruleset = ruleset;
         MaxParticipants = maxParticipants;
+        EventDate = eventDate;
         Status = EventStatus.Upcoming;
     }
 
@@ -58,7 +63,15 @@ public class Tournament
 
     public void UpdateStatus()
     {
-        if (Status == EventStatus.Cancelled) return;
+        if (Status == EventStatus.Cancelled || Status == EventStatus.Postponed)
+            return;
+
+        if (DateTime.Now >= EventDate)
+        {
+            Status = EventStatus.Completed;
+            return;
+        }
+
         Status = IsFull ? EventStatus.InProgress : EventStatus.Upcoming;
     }
 }

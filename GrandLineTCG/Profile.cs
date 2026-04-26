@@ -55,6 +55,7 @@ public class Profile
         Console.WriteLine($"║ Slots:  {t.ParticipantsCount}/{(int)t.MaxParticipants,-30}║");
         Console.WriteLine($"║ Prize:  {t.Prize} ({t.PrizeType})".PadRight(47) + "║");
         Console.WriteLine($"║ Place:  {t.Location,-36}║");
+        Console.WriteLine($"║ Rating: {t.AverageRating:F1}/5 ({t.Reviews.Count} reviews)║");
         Console.WriteLine("╠══════════════════════════════════════════════╣");
         
         var lines = SplitText(t.Description, 38);
@@ -111,6 +112,7 @@ public class Profile
         for (int i = 0; i < user.Host.Count; i++)
         {
             var t = user.Host[i];
+            t.UpdateStatus();
             DisplayTournamentCard(t, i + 1);
         }
 
@@ -181,6 +183,95 @@ public class Profile
         Console.WriteLine("Tournament updated.");
         Console.ReadLine();
     }
+    
+    private void LeaveTournament(User user, Tournament tournament)
+    {
+        if (!user.Attending.Contains(tournament))
+        {
+            Console.WriteLine("You are not registered for this tournament.");
+            Console.ReadLine();
+            return;
+        }
+        
+        user.Attending.Remove(tournament);
+        tournament.RemoveParticipant(user);
+
+        Console.WriteLine("You have left the tournament.");
+        Console.ReadLine();
+    }
+    
+    private void WriteReview(User user, Tournament tournament)
+    {
+        if (tournament.Host == user)
+        {
+            Console.WriteLine("You cannot review your own event.");
+            Console.ReadLine();
+            return;
+        }
+
+        if (!user.Attending.Contains(tournament))
+        {
+            Console.WriteLine("You can only review tournaments you attended.");
+            Console.ReadLine();
+            return;
+        }
+
+        if (DateTime.Now < tournament.EventDate)
+        {
+            Console.WriteLine("You can only review after the event has ended.");
+            Console.ReadLine();
+            return;
+        }
+        
+        bool alreadyReviewed = tournament.Reviews.Any(r => r.Author == user);
+
+        if (alreadyReviewed)
+        {
+            Console.WriteLine("You have already reviewed this tournament.");
+            Console.ReadLine();
+            return;
+        }
+
+        int rating = ReadIntInRange("Enter rating (1-5): ", 1, 5);
+
+        Console.WriteLine("Write an optional comment (press Enter to skip):");
+        string? comment = Console.ReadLine();
+
+        var review = new Review
+        {
+            Author = user,
+            Tournament = tournament,
+            Rating = rating,
+            Comment = string.IsNullOrWhiteSpace(comment) ? null : comment
+        };
+
+        tournament.Reviews.Add(review);
+
+        Console.WriteLine("Review submitted!");
+        Console.ReadLine();
+    }
+    
+    private void ShowBookingOptions(User user, Tournament tournament)
+    {
+        Console.Clear();
+
+        Console.WriteLine($"{tournament.Title}");
+        Console.WriteLine($"{tournament.Location} | {tournament.GameType}");
+        Console.WriteLine();
+
+        Console.WriteLine("1. Leave Tournament");
+        Console.WriteLine("2. Write Review");
+        Console.WriteLine("3. Go Back");
+
+        int choice = ReadIntInRange("Select an option: ", 1, 3);
+
+        switch (choice)
+        {
+            case 1: LeaveTournament(user, tournament); break;
+            case 2: WriteReview(user, tournament); break;
+            default: return;
+        }
+    }
 
     private void ShowMyBookings(User user)
     {
@@ -194,15 +285,22 @@ public class Profile
             return;
         }
 
-        int index = 1;
-        foreach (var tournament in user.Attending)
+        for (int i = 0; i < user.Attending.Count; i++)
         {
-            DisplayTournamentCard(tournament, index++);
+            var t = user.Attending[i];
+            t.UpdateStatus();
+            DisplayTournamentCard(t, i + 1);
         }
 
-        Console.WriteLine();
-        Console.WriteLine("Press Enter to go back...");
-        Console.ReadLine();
+        Console.WriteLine($"{user.Attending.Count + 1}. Go Back");
+
+        int choice = ReadIntInRange("Select a tournament: ", 1, user.Attending.Count + 1);
+
+        if (choice == user.Attending.Count + 1)
+            return;
+
+        var selectedTournament = user.Attending[choice - 1];
+        ShowBookingOptions(user, selectedTournament);
     }
 
     private void ShowMyReviewComments(User user)

@@ -35,7 +35,8 @@ public class Controller
         TournamentType tournamentType, 
         PrizeType prizeType, 
         Ruleset ruleset, 
-        MaxParticipants maxParticipants)
+        MaxParticipants maxParticipants,
+        DateTime eventDate)
     {
         var tournament = new Tournament(
             host,
@@ -47,7 +48,8 @@ public class Controller
             tournamentType,
             prizeType,
             ruleset,
-            maxParticipants);
+            maxParticipants,
+            eventDate);
         host.Host.Add(tournament);
         _tournaments.Add(tournament);
         return tournament;
