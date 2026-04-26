@@ -305,7 +305,39 @@ public class Profile
 
     private void ShowMyReviewComments(User user)
     {
-        Console.WriteLine("Feature not implemented yet.");
+        Console.Clear();
+        Console.WriteLine("REVIEWS ON YOUR EVENTS:\n");
+
+        bool hasReviews = false;
+
+        foreach (var tournament in user.Host)
+        {
+            tournament.UpdateStatus();
+
+            foreach (var review in tournament.Reviews)
+            {
+                hasReviews = true;
+
+                Console.WriteLine("════════════════════════════════════");
+                Console.WriteLine($"Event: {tournament.Title}");
+                Console.WriteLine($"Rating: {review.Rating}/5");
+                Console.WriteLine($"By: {review.Author.Username}");
+
+                if (!string.IsNullOrWhiteSpace(review.Comment))
+                    Console.WriteLine($"Comment: {review.Comment}");
+                else
+                    Console.WriteLine("Comment: (no comment)");
+
+                Console.WriteLine($"Date: {review.CreatedAt:dd MMM yyyy}");
+            }
+        }
+
+        if (!hasReviews)
+        {
+            Console.WriteLine("No reviews yet on your events.");
+        }
+
+        Console.WriteLine("\nPress Enter to go back...");
         Console.ReadLine();
     }
 }
