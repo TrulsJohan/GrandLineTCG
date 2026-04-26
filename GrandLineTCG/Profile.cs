@@ -20,6 +20,52 @@ public class Profile
             Console.WriteLine($"Please enter a valid number between {min} and {max}.");
         }
     }
+    
+    private List<string> SplitText(string text, int maxLength)
+    {
+        var words = text.Split(' ');
+        var lines = new List<string>();
+        var currentLine = "";
+
+        foreach (var word in words)
+        {
+            if ((currentLine + word).Length > maxLength)
+            {
+                lines.Add(currentLine.Trim());
+                currentLine = "";
+            }
+
+            currentLine += word + " ";
+        }
+
+        if (!string.IsNullOrWhiteSpace(currentLine))
+            lines.Add(currentLine.Trim());
+
+        return lines;
+    }
+    
+    private void DisplayTournamentCard(Tournament t, int index)
+    {
+        Console.WriteLine("╔══════════════════════════════════════════════╗");
+        Console.WriteLine($"║ {index,2}. {t.Title,-36}║");
+        Console.WriteLine("╠══════════════════════════════════════════════╣");
+        Console.WriteLine($"║ Status: {t.Status,-36}║");
+        Console.WriteLine($"║ Game:   {t.GameType,-36}║");
+        Console.WriteLine($"║ Type:   {t.Type,-36}║");
+        Console.WriteLine($"║ Slots:  {t.ParticipantsCount}/{(int)t.MaxParticipants,-30}║");
+        Console.WriteLine($"║ Prize:  {t.Prize} ({t.PrizeType})".PadRight(47) + "║");
+        Console.WriteLine($"║ Place:  {t.Location,-36}║");
+        Console.WriteLine("╠══════════════════════════════════════════════╣");
+        
+        var lines = SplitText(t.Description, 38);
+        foreach (var line in lines)
+        {
+            Console.WriteLine($"║ {line,-38} ║");
+        }
+
+        Console.WriteLine("╚══════════════════════════════════════════════╝");
+        Console.WriteLine();
+    }
 
     public void Display(User user)
     {
@@ -65,8 +111,7 @@ public class Profile
         for (int i = 0; i < user.Host.Count; i++)
         {
             var t = user.Host[i];
-            Console.WriteLine($"{i + 1}. {t.Title} [{t.Status}]");
-            Console.WriteLine($"   {t.Location} | {t.GameType}");
+            DisplayTournamentCard(t, i + 1);
         }
 
         Console.WriteLine($"{user.Host.Count + 1}. Go Back");
@@ -149,12 +194,10 @@ public class Profile
             return;
         }
 
+        int index = 1;
         foreach (var tournament in user.Attending)
         {
-            Console.WriteLine();
-            Console.WriteLine($"{tournament.Title} [{tournament.Status}]");
-            Console.WriteLine($"{tournament.Location} | {tournament.GameType}");
-            Console.WriteLine($"{tournament.Description}");
+            DisplayTournamentCard(tournament, index++);
         }
 
         Console.WriteLine();

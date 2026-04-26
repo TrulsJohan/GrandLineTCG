@@ -42,8 +42,6 @@ public class Tournament
         Ruleset = ruleset;
         MaxParticipants = maxParticipants;
         Status = EventStatus.Upcoming;
-        Ruleset = Ruleset.Regular;
-        PrizeType = PrizeType.Products;
     }
 
     public bool AddParticipant(User user)
