@@ -57,6 +57,20 @@ public class UI
         int choice = ReadIntInRange("Select: ", 1, values.Length);
         return values[choice - 1];
     }
+    
+    private DateTime ReadEventDate(string prompt)
+    {
+        while (true)
+        {
+            Console.WriteLine(prompt);
+            string? input = Console.ReadLine();
+
+            if (DateTime.TryParse(input, out DateTime date))
+                return date;
+
+            Console.WriteLine("Invalid date format. Example: 2026-12-31 18:00");
+        }
+    }
 
     private void ShowGuestMenu()
     {
@@ -146,6 +160,7 @@ public class UI
         PrizeType prizeType = ReadEnum<PrizeType>("Prize Type: ");
         Ruleset ruleset = ReadEnum<Ruleset>("Ruleset: ");
         MaxParticipants maxParticipants = ReadEnum<MaxParticipants>("Max Participants: ");
+        DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
 
         var tournament = _controller.CreateTournament(
             _currentUser!,
@@ -157,7 +172,8 @@ public class UI
             tournamentType,
             prizeType,
             ruleset,
-            maxParticipants);
+            maxParticipants,
+            eventDate);
         Console.WriteLine("Tournament created successfully.");
     }
 
