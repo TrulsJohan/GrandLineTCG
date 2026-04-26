@@ -163,7 +163,7 @@ public class UI
 
     private void HandleProfile()
     {
-        var profile = new Profile();
+        var profile = new Profile(_controller);
         profile.Display(_currentUser!);
     }
 
