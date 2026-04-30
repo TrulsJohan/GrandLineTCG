@@ -1,4 +1,6 @@
-﻿namespace GrandLineTCG;
+﻿using GrandLineTCG.interfaces;
+
+namespace GrandLineTCG;
 
 public class Profile
 {
@@ -44,25 +46,36 @@ public class Profile
         return lines;
     }
     
-    private void DisplayTournamentCard(Tournament t, int index)
+    private void DisplayEventCard(IEvent e, int index)
     {
         Console.WriteLine("╔══════════════════════════════════════════════╗");
-        Console.WriteLine($"║ {index,2}. {t.Title,-36}║");
+        Console.WriteLine($"║ {index,2}. {e.Title,-36}║");
         Console.WriteLine("╠══════════════════════════════════════════════╣");
-        Console.WriteLine($"║ Status: {t.Status,-36}║");
-        Console.WriteLine($"║ Game:   {t.GameType,-36}║");
-        Console.WriteLine($"║ Type:   {t.Type,-36}║");
-        Console.WriteLine($"║ Slots:  {t.ParticipantsCount}/{(int)t.MaxParticipants,-30}║");
-        Console.WriteLine($"║ Prize:  {t.Prize} ({t.PrizeType})".PadRight(47) + "║");
-        Console.WriteLine($"║ Place:  {t.Location,-36}║");
-        Console.WriteLine($"║ Rating: {t.AverageRating:F1}/5 ({t.Reviews.Count} reviews)║");
-        Console.WriteLine("╠══════════════════════════════════════════════╣");
-        
-        var lines = SplitText(t.Description, 38);
-        foreach (var line in lines)
+        Console.WriteLine($"║ Status: {e.Status,-36}║");
+        Console.WriteLine($"║ Slots:  {e.ParticipantsCount}/{e.MaxCapacity,-30}║");
+        Console.WriteLine($"║ Place:  {e.Location,-36}║");
+
+        if (e is Tournament t)
         {
-            Console.WriteLine($"║ {line,-38} ║");
+            Console.WriteLine($"║ Game:   {t.GameType,-36}║");
+            Console.WriteLine($"║ Type:   {t.Type,-36}║");
+            Console.WriteLine($"║ Prize:  {t.Prize} ({t.PrizeType})".PadRight(47) + "║");
+            Console.WriteLine($"║ Rating: {t.AverageRating:F1}/5 ({t.Reviews.Count} reviews)║");
         }
+        else if (e is TradingEvent te)
+        {
+            Console.WriteLine($"║ Table fee:    {te.TableFee:N0} kr".PadRight(47) + "║");
+            Console.WriteLine($"║ Vendor slots: {te.VendorSlots,-26}║");
+            var rarities = string.Join(", ", te.AllowedRarities);
+            Console.WriteLine($"║ Rarities: {rarities,-32}║");
+            Console.WriteLine($"║ Rating: {te.AverageRating:F1}/5 ({te.Reviews.Count} reviews)║");
+        }
+
+        Console.WriteLine("╠══════════════════════════════════════════════╣");
+
+        var lines = SplitText(e.Description, 38);
+        foreach (var line in lines)
+            Console.WriteLine($"║ {line,-38} ║");
 
         Console.WriteLine("╚══════════════════════════════════════════════╝");
         Console.WriteLine();
@@ -111,9 +124,9 @@ public class Profile
 
         for (int i = 0; i < user.Host.Count; i++)
         {
-            var t = user.Host[i];
-            t.UpdateStatus();
-            DisplayTournamentCard(t, i + 1);
+            var e = (BaseEvent)user.Host[i];
+            e.UpdateStatus();
+            DisplayEventCard(e, i + 1);
         }
 
         Console.WriteLine($"{user.Host.Count + 1}. Go Back");
@@ -124,16 +137,16 @@ public class Profile
             return;
 
         var selectedTournament = user.Host[choice - 1];
-        ShowHostOptions(user, selectedTournament);
+        ShowHostOptions(user, (BaseEvent)user.Host[choice - 1]);
     }
 
-    private void ShowHostOptions(User user, Tournament tournament)
+    private void ShowHostOptions(User user, BaseEvent @event)
     {
         Console.Clear();
 
-        Console.WriteLine($"{tournament.Title} [{tournament.Status}]");
-        Console.WriteLine($"{tournament.Location} | {tournament.GameType}");
-        Console.WriteLine(tournament.Description);
+        Console.WriteLine($"{@event.Title} [{@event.Status}]");
+        Console.WriteLine($"{@event.Location}");
+        Console.WriteLine(@event.Description);
         Console.WriteLine();
 
         Console.WriteLine("1. Update Event");
@@ -145,13 +158,13 @@ public class Profile
         switch (choice)
         {
             case 1:
-                UpdateTournament(tournament);
+                UpdateEvent(@event);
                 break;
 
             case 2:
                 try
                 {
-                    _controller.CancelTournament(user, tournament);
+                    _controller.CancelTournament(user, @event);
                     Console.WriteLine("Tournament cancelled successfully.");
                 }
                 catch (Exception ex)
@@ -166,64 +179,64 @@ public class Profile
         }
     }
 
-    private void UpdateTournament(Tournament tournament)
+    private void UpdateEvent (BaseEvent @event)
     {
         Console.WriteLine("Enter new title (leave blank to keep current):");
         string? title = Console.ReadLine();
 
         if (!string.IsNullOrWhiteSpace(title))
-            tournament.Title = title;
+            @event.Title = title;
 
         Console.WriteLine("Enter new description (leave blank to keep current):");
         string? description = Console.ReadLine();
 
         if (!string.IsNullOrWhiteSpace(description))
-            tournament.Description = description;
+            @event.Description = description;
 
         Console.WriteLine("Tournament updated.");
         Console.ReadLine();
     }
     
-    private void LeaveTournament(User user, Tournament tournament)
+    private void LeaveEvent(User user, BaseEvent @event)
     {
-        if (!user.Attending.Contains(tournament))
+        if (!user.Attending.Contains(@event))
         {
             Console.WriteLine("You are not registered for this tournament.");
             Console.ReadLine();
             return;
         }
         
-        user.Attending.Remove(tournament);
-        tournament.RemoveParticipant(user);
+        user.Attending.Remove(@event);
+        @event.RemoveParticipant(user);
 
         Console.WriteLine("You have left the tournament.");
         Console.ReadLine();
     }
     
-    private void WriteReview(User user, Tournament tournament)
+    private void WriteReview(User user, BaseEvent @event)
     {
-        if (tournament.Host == user)
+        if (@event.Host == user)
         {
             Console.WriteLine("You cannot review your own event.");
             Console.ReadLine();
             return;
         }
 
-        if (!user.Attending.Contains(tournament))
+        if (!user.Attending.Contains(@event))
         {
             Console.WriteLine("You can only review tournaments you attended.");
             Console.ReadLine();
             return;
         }
 
-        if (DateTime.Now < tournament.EventDate)
+        if (DateTime.Now < @event.EventDate)
         {
             Console.WriteLine("You can only review after the event has ended.");
             Console.ReadLine();
             return;
         }
         
-        bool alreadyReviewed = tournament.Reviews.Any(r => r.Author == user);
+        bool alreadyReviewed = @event.Reviews.Any(r => r.Author == user);
 
         if (alreadyReviewed)
         {
@@ -240,23 +253,23 @@ public class Profile
         var review = new Review
         {
             Author = user,
-            Tournament = tournament,
+            Event = @event,
             Rating = rating,
             Comment = string.IsNullOrWhiteSpace(comment) ? null : comment
         };
 
-        tournament.Reviews.Add(review);
+        @event.Reviews.Add(review);
 
         Console.WriteLine("Review submitted!");
         Console.ReadLine();
     }
     
-    private void ShowBookingOptions(User user, Tournament tournament)
+    private void ShowBookingOptions(User user, BaseEvent @event)
     {
         Console.Clear();
 
-        Console.WriteLine($"{tournament.Title}");
-        Console.WriteLine($"{tournament.Location} | {tournament.GameType}");
+        Console.WriteLine($"{@event.Title}");
+        Console.WriteLine($"{@event.Location}");
         Console.WriteLine();
 
         Console.WriteLine("1. Leave Tournament");
@@ -267,8 +280,8 @@ public class Profile
 
         switch (choice)
         {
-            case 1: LeaveTournament(user, tournament); break;
-            case 2: WriteReview(user, tournament); break;
+            case 1: LeaveEvent(user, @event); break;
+            case 2: WriteReview(user, @event); break;
             default: return;
         }
     }
@@ -289,7 +302,7 @@ public class Profile
         {
             var t = user.Attending[i];
             t.UpdateStatus();
-            DisplayTournamentCard(t, i + 1);
+            DisplayEventCard(t, i + 1);
         }
 
         Console.WriteLine($"{user.Attending.Count + 1}. Go Back");
@@ -299,8 +312,8 @@ public class Profile
         if (choice == user.Attending.Count + 1)
             return;
 
-        var selectedTournament = user.Attending[choice - 1];
-        ShowBookingOptions(user, selectedTournament);
+        var selectedEvent = user.Attending[choice - 1];
+        ShowBookingOptions(user,(BaseEvent)user.Attending[choice - 1]);
     }
 
     private void ShowMyReviewComments(User user)
@@ -310,25 +323,22 @@ public class Profile
 
         bool hasReviews = false;
 
-        foreach (var tournament in user.Host)
+        foreach (var e in user.Host)
         {
-            tournament.UpdateStatus();
+            var baseEvent = (BaseEvent)e;
+            baseEvent.UpdateStatus();
 
-            foreach (var review in tournament.Reviews)
+            foreach (var review in baseEvent.Reviews)
             {
                 hasReviews = true;
-
                 Console.WriteLine("════════════════════════════════════");
-                Console.WriteLine($"Event: {tournament.Title}");
-                Console.WriteLine($"Rating: {review.Rating}/5");
-                Console.WriteLine($"By: {review.Author.Username}");
-
-                if (!string.IsNullOrWhiteSpace(review.Comment))
-                    Console.WriteLine($"Comment: {review.Comment}");
-                else
-                    Console.WriteLine("Comment: (no comment)");
-
-                Console.WriteLine($"Date: {review.CreatedAt:dd MMM yyyy}");
+                Console.WriteLine($"Event:   {baseEvent.Title}");
+                Console.WriteLine($"Rating:  {review.Rating}/5");
+                Console.WriteLine($"By:      {review.Author.Username}");
+                Console.WriteLine(string.IsNullOrWhiteSpace(review.Comment)
+                    ? "Comment: (no comment)"
+                    : $"Comment: {review.Comment}");
+                Console.WriteLine($"Date:    {review.CreatedAt:dd MMM yyyy}");
             }
         }
 
