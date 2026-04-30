@@ -1,8 +1,11 @@
+using GrandLineTCG.interfaces;
+
 namespace GrandLineTCG;
 
 public class Controller
 {
     private readonly List<User> _users = new ();
+    private readonly List<TradingEvent> _tradeEvents = new();
     private readonly List<Tournament> _tournaments = new();
     
     public User Register(string username, string password)
@@ -23,6 +26,17 @@ public class Controller
             throw new InvalidOperationException("invalid username or password");
         
         return user;
+    }
+
+    public TradingEvent CreateTradingEvent(User host, string title, string description,
+        string location, decimal price, DateTime eventDate,
+        decimal tableFee, int vendorSlots, List<CardRarity> allowedRarities)
+    {
+        var tradeEvent = new TradingEvent(host, title, description, location,
+            price, eventDate, tableFee, vendorSlots, allowedRarities);
+        host.Host.Add(tradeEvent);
+        _tradeEvents.Add(tradeEvent);
+        return tradeEvent;
     }
 
     public Tournament CreateTournament(
@@ -75,23 +89,25 @@ public class Controller
             .ToList();
     }
 
-    public Booking BookTournament(User user, Tournament tournament)
+    public Booking BookEvent(User user, IEvent @event)
     {
-        if (tournament.Host == user)
+        if (@event.Host == user)
             throw new InvalidOperationException("You cannot book your own tournament.");
 
-        if (tournament.IsFull)
+        if (@event.IsFull)
             throw new InvalidOperationException("The tournament is full.");
 
-        if (tournament.Participants.Contains(user))
+        var baseEvent = (BaseEvent)@event;
+        
+        if (baseEvent.Participants.Contains(user))
             throw new InvalidOperationException("You are already booked to this tournament.");
         
-        tournament.AddParticipant(user);
-        tournament.UpdateStatus();
+        @event.AddParticipant(user);
+        @event.UpdateStatus();
 
-        var booking = new Booking(user, tournament, tournament.Prize);
+        var booking = new Booking(user, @event, @event.Price);
         user.Purchases.Add(booking);
-        user.Attending.Add(tournament);
+        user.Attending.Add(@event);
         return booking;
     }
 
@@ -101,22 +117,24 @@ public class Controller
             throw new InvalidOperationException("You can only cancel your own bookings.");
         
         booking.Cancel();
-        booking.Tournament.RemoveParticipant(user);
-        booking.Tournament.UpdateStatus();
-        user.Attending.Remove(booking.Tournament);
+        booking.Event.RemoveParticipant(user);
+        booking.Event.UpdateStatus();
+        user.Attending.Remove(booking.Event);
     }
 
-    public void CancelTournament(User user, Tournament tournament)
+    public void CancelTournament(User user, IEvent @event)
     {
-        if (tournament.Host != user)
+        if (@event.Host != user)
             throw new InvalidOperationException("You can only cancel your tournaments.");
         
-        tournament.Status = EventStatus.Cancelled;
+        @event.Status = EventStatus.Cancelled;
+       
+        var baseEvent = (BaseEvent)@event;
 
-        foreach (var participant in tournament.Participants)
-            participant.Attending.Remove(tournament);
+        foreach (var participant in @baseEvent.Participants)
+            participant.Attending.Remove(@event);
         
-        tournament.Participants.Clear();
+        baseEvent.Participants.Clear();
     }
     
 }

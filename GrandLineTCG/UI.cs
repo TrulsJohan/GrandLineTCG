@@ -293,7 +293,7 @@ public class UI
         {
             try
             {
-                var booking = _controller.BookTournament(_currentUser!, tournament);
+                var booking = _controller.BookEvent(_currentUser!, tournament);
                 Console.WriteLine("Booking complete");
                 Console.WriteLine($"Reference: {booking.Reference}");
                 Console.WriteLine($"Price: {booking.PriceAtBooking:N0} kr");

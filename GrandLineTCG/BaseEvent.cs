@@ -1,6 +1,8 @@
+using GrandLineTCG.interfaces;
+
 namespace GrandLineTCG;
 
-public abstract class BaseEvent
+public abstract class BaseEvent : IEvent
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public User Host { get; set; }

@@ -13,4 +13,7 @@ public interface IEvent
     int ParticipantsCount { get; }
     bool IsFull { get; }
     SlotStatus SlotStatus { get; }
+    bool AddParticipant(User user);
+    void RemoveParticipant(User user);
+    void UpdateStatus();
 }
