@@ -1,6 +1,6 @@
 namespace GrandLineTCG.interfaces;
 
-public class IEvent
+public interface IEvent
 {
     Guid Id { get; }
     User Host { get; }
