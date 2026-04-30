@@ -47,6 +47,15 @@ public enum Ruleset
     Limited
 }
 
+public enum CardRarity
+{
+    Common,
+    Uncommon,
+    Rare,
+    SuperRare,
+    SecretRare
+}
+
 public enum EventStatus
 {
     Upcoming,
