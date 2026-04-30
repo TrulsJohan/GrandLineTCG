@@ -1,3 +1,5 @@
+using GrandLineTCG.interfaces;
+
 namespace GrandLineTCG;
 
 using BCrypt.Net;
@@ -10,9 +12,9 @@ public class User
     
     public DateTime AccountCreated { get; set; } = DateTime.Now;
 
-    public List<Tournament> Host { get; set; } = new();
+    public List<IEvent> Host { get; set; } = new();
    
-    public List<Tournament> Attending { get; set; } = new();
+    public List<IEvent> Attending { get; set; } = new();
 
     public List<Booking> Purchases { get; set; } = new();
     
