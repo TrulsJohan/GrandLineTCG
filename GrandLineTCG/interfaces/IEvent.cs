@@ -1,0 +1,16 @@
+namespace GrandLineTCG.interfaces;
+
+public class IEvent
+{
+    Guid Id { get; }
+    User Host { get; }
+    string Title { get; }
+    string Description { get; }
+    string Location { get; }
+    decimal Price { get; }
+    DateTime EventDate { get; }
+    EventStatus Status { get; set; }
+    int ParticipantsCount { get; }
+    bool IsFull { get; }
+    SlotStatus SlotStatus { get; }
+}
