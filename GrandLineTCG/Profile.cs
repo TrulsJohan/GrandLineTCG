@@ -199,17 +199,25 @@ public class Profile
     
     private void LeaveEvent(User user, BaseEvent @event)
     {
-        if (!user.Attending.Contains(@event))
+        var booking = user.Purchases
+            .FirstOrDefault(b => b.Event == @event && b.Status == BookingStatus.Confirmed);
+
+        if (booking == null)
         {
-            Console.WriteLine("You are not registered for this tournament.");
+            Console.WriteLine("You have no active booking for this event.");
             Console.ReadLine();
             return;
         }
-        
-        user.Attending.Remove(@event);
-        @event.RemoveParticipant(user);
 
-        Console.WriteLine("You have left the tournament.");
+        try
+        {
+            _controller.CancelBooking(user, booking);
+            Console.WriteLine("Your booking has been cancelled and your ticket has been returned.");
+        }
+        catch (InvalidOperationException e)
+        {
+            Console.WriteLine(e.Message);
+        }
         Console.ReadLine();
     }
     
