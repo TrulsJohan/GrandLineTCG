@@ -14,6 +14,7 @@ public abstract class BaseEvent : IEvent
     public EventStatus Status { get; set; }
     public List<User> Participants { get; set; } = new();
     public List<Review> Reviews { get; set; } = new();
+    public List<TicketType> TicketTypes { get; set; } = new();
 
     public abstract int MaxCapacity { get; }
     public int ParticipantsCount => Participants.Count;
