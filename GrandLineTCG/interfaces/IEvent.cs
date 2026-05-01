@@ -14,6 +14,7 @@ public interface IEvent
     bool IsFull { get; }
     int MaxCapacity { get; } 
     SlotStatus SlotStatus { get; }
+    List<TicketType> TicketTypes { get; }
     bool AddParticipant(User user);
     void RemoveParticipant(User user);
     void UpdateStatus();
