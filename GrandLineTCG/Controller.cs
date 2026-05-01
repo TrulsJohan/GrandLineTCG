@@ -89,23 +89,27 @@ public class Controller
             .ToList();
     }
 
-    public Booking BookEvent(User user, IEvent @event)
+    public Booking BookEvent(User user, IEvent @event, TicketType ticketType)
     {
         if (@event.Host == user)
             throw new InvalidOperationException("You cannot book your own tournament.");
 
         if (@event.IsFull)
             throw new InvalidOperationException("The tournament is full.");
+        
+        if (!ticketType.IsAvailable)
+            throw new InvalidOperationException("This ticket type is no longer available.");
 
         var baseEvent = (BaseEvent)@event;
         
         if (baseEvent.Participants.Contains(user))
             throw new InvalidOperationException("You are already booked to this tournament.");
-        
+
+        ticketType.Book();
         @event.AddParticipant(user);
         @event.UpdateStatus();
 
-        var booking = new Booking(user, @event, @event.Price);
+        var booking = new Booking(user, @event, ticketType);
         user.Purchases.Add(booking);
         user.Attending.Add(@event);
         return booking;
@@ -135,6 +139,14 @@ public class Controller
             participant.Attending.Remove(@event);
         
         baseEvent.Participants.Clear();
+    }
+
+    public void AddTicketType(User user, IEvent @event, string name, decimal price, int quantity)
+    {
+        if (@event.Host != user)
+            throw new InvalidOperationException("Only the host can add a ticket type.");
+        var ticketType = new TicketType(name, price, quantity);
+        @event.TicketTypes.Add(ticketType);
     }
     
 }
