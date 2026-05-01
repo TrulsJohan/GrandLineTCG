@@ -1,7 +1,9 @@
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
+using GrandLineTCG.interfaces;
 
 namespace GrandLineTCG;
+
 
 public class UI
 {
@@ -70,6 +72,23 @@ public class UI
 
             Console.WriteLine("Invalid date format. Example: 2026-12-31 18:00");
         }
+    }
+
+    private TicketType? SelectTicketType(IEvent @event)
+    {
+        var available = @event.TicketTypes.Where(t => t.IsAvailable).ToList();
+
+        if (!available.Any())
+        {
+            Console.WriteLine("No ticket types available.");
+            return null;
+        }
+        
+        Console.WriteLine("Available ticket types:");
+        for (int i = 0; i < available.Count; i++)
+            Console.WriteLine($"{i + 1}. {available[i].Name} - {available[i].Price:N0} kr ({available[i].Remaining} remaining)");
+        int choice = ReadIntInRange("Select a ticket type: ", 1, available.Count);
+        return available[choice - 1];
     }
 
     private void ShowGuestMenu()
@@ -162,6 +181,17 @@ public class UI
         MaxParticipants maxParticipants = ReadEnum<MaxParticipants>("Max Participants: ");
         DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
 
+        Console.WriteLine("\nNow set the price and quantity for each ticket type:");
+        var ticketPrices = new Dictionary<string, (int price, int quantity)>();
+        string[] ticketNames = { "Early Bird", "Standard", "VIP" };
+        foreach (var name in ticketNames)
+        {
+            Console.WriteLine($"\n{name} ticket:");
+            int ticketPrice = ReadIntInRange("Price: ", 0, int.MaxValue);
+            int quantity = ReadIntInRange("Quantity: ", 1, int.MaxValue);
+            ticketPrices[name] = (ticketPrice, quantity);
+        }
+
         var tournament = _controller.CreateTournament(
             _currentUser!,
             title,
@@ -174,6 +204,10 @@ public class UI
             ruleset,
             maxParticipants,
             eventDate);
+
+        foreach (var (name, info) in ticketPrices)
+            _controller.AddTicketType(_currentUser!, tournament, name, info.price, info.quantity);
+
         Console.WriteLine("Tournament created successfully.");
     }
 
@@ -293,11 +327,15 @@ public class UI
         {
             try
             {
-                var booking = _controller.BookEvent(_currentUser!, tournament);
-                Console.WriteLine("Booking complete");
+                var ticketType = SelectTicketType(tournament);
+                if (ticketType == null) return;
+
+                var booking = _controller.BookEvent(_currentUser!, tournament, ticketType);
+                Console.WriteLine("Booking confirmed!");
                 Console.WriteLine($"Reference: {booking.Reference}");
-                Console.WriteLine($"Price: {booking.PriceAtBooking:N0} kr");
-                Console.WriteLine($"Booked: {booking.BookedAt:dd MMM yyyy}");
+                Console.WriteLine($"Ticket:    {booking.TicketType.Name}");
+                Console.WriteLine($"Price:     {booking.PriceAtBooking:N0} kr");
+                Console.WriteLine($"Booked:    {booking.BookedAt:dd MMM yyyy}");
             }
             catch (InvalidOperationException e)
             {
