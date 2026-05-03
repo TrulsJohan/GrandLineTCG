@@ -71,31 +71,30 @@ public class Controller
     
     // browse, search and sort listings
 
-    public List<Tournament> GetAllTournaments()
+    public List<IEvent> GetAllEvents()
     {
-        return _tournaments
-            .Where(t => t.Status == EventStatus.Upcoming)
+        return _tournaments.Cast<IEvent>()
+            .Concat(_tradeEvents.Cast<IEvent>())
+            .Where(e => e.Status == EventStatus.Upcoming)
             .ToList();
     }
     
-    public List<Tournament> SearchTournaments(string searchTerm)
+    public List<IEvent> SearchEvents(string searchTerm)
     {
         var lower = searchTerm.ToLower();
-        return _tournaments
-            .Where(t => t.Status == EventStatus.Upcoming &&
-                        (t.Title.ToLower().Contains(lower) || 
-                         t.Description.ToLower().Contains(lower) || 
-                         t.Location.ToLower().Contains(lower)))
+        return GetAllEvents()
+            .Where(e => e.Title.ToLower().Contains(lower) ||
+                        e.Description.ToLower().Contains(lower))
             .ToList();
     }
 
     public Booking BookEvent(User user, IEvent @event, TicketType ticketType)
     {
         if (@event.Host == user)
-            throw new InvalidOperationException("You cannot book your own tournament.");
+            throw new InvalidOperationException("You cannot book your own event.");
 
         if (@event.IsFull)
-            throw new InvalidOperationException("The tournament is full.");
+            throw new InvalidOperationException("The event is full.");
         
         if (!ticketType.IsAvailable)
             throw new InvalidOperationException("This ticket type is no longer available.");
@@ -126,10 +125,10 @@ public class Controller
         user.Attending.Remove(booking.Event);
     }
 
-    public void CancelTournament(User user, IEvent @event)
+    public void CancelEvent(User user, IEvent @event)
     {
         if (@event.Host != user)
-            throw new InvalidOperationException("You can only cancel your tournaments.");
+            throw new InvalidOperationException("You can only cancel your events.");
         
         @event.Status = EventStatus.Cancelled;
        
