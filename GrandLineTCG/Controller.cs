@@ -41,25 +41,19 @@ public class Controller
 
     public Tournament CreateTournament(
         User host,
-        string title, 
-        string description, 
+        string title,
+        string description,
         string location,
-        ListingType gameTypes, 
-        TournamentType tournamentType, 
-        PrizeType prizeType, 
+        ListingType gameTypes,
+        TournamentType tournamentType,
+        PrizeType prizeType,
+        string prizeDescription,
         Ruleset ruleset,
         DateTime eventDate)
     {
         var tournament = new Tournament(
-            host,
-            title,
-            description,
-            location,
-            gameTypes,
-            tournamentType,
-            prizeType,
-            ruleset,
-            eventDate);
+            host, title, description, location,
+            gameTypes, tournamentType, prizeType, prizeDescription, ruleset, eventDate);
         host.Host.Add(tournament);
         _tournaments.Add(tournament);
         return tournament;

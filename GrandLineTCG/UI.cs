@@ -201,6 +201,14 @@ public class UI
         ListingType gameTypes = ReadEnum<ListingType>("Game Types: ");
         TournamentType tournamentType = ReadEnum<TournamentType>("Tournament Type: ");
         PrizeType prizeType = ReadEnum<PrizeType>("Prize Type: ");
+        string prizeDescription = prizeType switch
+        {
+            PrizeType.Cash => $"{ReadIntInRange("Prize amount (kr): ", 0, int.MaxValue)} kr",
+            PrizeType.Products => ReadRequiredString("Describe the prize (e.g. Packs, Trophy"),
+            PrizeType.Honor => "Honor and glory!",
+            PrizeType.Mixed => ReadRequiredString("Describe the prize (e.g. 500kr + 3 Packs"),
+            _ => string.Empty
+        }; 
         Ruleset ruleset = ReadEnum<Ruleset>("Ruleset: ");
         DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
 
@@ -223,6 +231,7 @@ public class UI
             gameTypes,
             tournamentType,
             prizeType,
+            prizeDescription,
             ruleset,
             eventDate);
 
@@ -340,14 +349,14 @@ public class UI
         Console.WriteLine();
         Console.WriteLine(
             $"{"#",4} {"Title",-25} {"Host",-15} {"Location",-15} {"Kind",-14} {"Status",-12} {"Info",10}");
-        Console.WriteLine(new string('-', 97));
+        Console.WriteLine(new string('-', 101));
 
         for (int i = 0; i < events.Count; i++)
         {
             var e = events[i];
             string kind = e is Tournament ? "Tournament" : "Trading";
             string info = e is Tournament t
-                ? (t.PrizeType == PrizeType.Cash ? $"{t.Prize:N0} kr" : t.PrizeType.ToString())
+                ? t.PrizeDescription
                 : e is TradingEvent te ? $"Fee {te.TableFee:N0} kr" : "-";
 
             Console.WriteLine(
@@ -381,7 +390,7 @@ public class UI
             Console.WriteLine($"Game:         {t.GameType}");
             Console.WriteLine($"Type:         {t.Type}");
             Console.WriteLine($"Ruleset:      {t.Ruleset}");
-            Console.WriteLine($"Prize:        {t.Prize:N0} kr ({t.PrizeType})");
+            Console.WriteLine($"Prize:        {t.PrizeDescription} ({t.PrizeType})");
         }
         else if (@event is TradingEvent te)
         {
