@@ -73,3 +73,9 @@ public enum MaxParticipants
     _64 = 64,
     _128 = 128
 }
+
+public enum TicketCategory
+{
+    Visitor,
+    Vendor
+}
