@@ -21,6 +21,14 @@ public class Booking
         PriceAtBooking = ticketType.Price;
         Status = BookingStatus.Confirmed;
     }
+    
+    public void SyncWithEvent()
+    {
+        if (Event.Status == EventStatus.Cancelled)
+        {
+            Status = BookingStatus.Cancelled;
+        }
+    }
 
     public void Cancel()
     {

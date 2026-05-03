@@ -304,9 +304,7 @@ public class Profile
         Console.Clear();
         Console.WriteLine("MY BOOKINGS:\n");
 
-        var bookings = user.Purchases
-            .Where(b => b.Status == BookingStatus.Confirmed)
-            .ToList();
+        var bookings = user.Purchases.ToList();
 
         if (!bookings.Any())
         {
@@ -314,10 +312,17 @@ public class Profile
             Console.ReadLine();
             return;
         }
-
-        for (int i = 0; i < bookings.Count; i++)
+        
+        foreach (var b in bookings)
         {
-            var b = bookings[i];
+            b.SyncWithEvent();
+        }
+
+        var visibleBookings = bookings;
+
+        for (int i = 0; i < visibleBookings.Count; i++)
+        {
+            var b = visibleBookings[i];
             var e = b.Event;
 
             Console.WriteLine("╔══════════════════════════════════════════════╗");
@@ -326,21 +331,22 @@ public class Profile
             Console.WriteLine($"║ Ticket: {b.TicketType.Name,-34}║");
             Console.WriteLine($"║ Price:  {b.PriceAtBooking:N0} kr║");
             Console.WriteLine($"║ Booked: {b.BookedAt:dd MMM yyyy}║");
-            Console.WriteLine($"║ Booking Status: {b.Status,-34}║");
-            Console.WriteLine($"║ Ref:    {b.Reference,-34}║");
-            Console.WriteLine($"║ Place:  {e.Location,-36}║");
+            Console.WriteLine($"║ Booking: {b.Status,-34}║");
+            Console.WriteLine($"║ Event:   {e.Status,-34}║");
+            Console.WriteLine($"║ Ref:     {b.Reference,-34}║");
+            Console.WriteLine($"║ Place:   {e.Location,-36}║");
             Console.WriteLine("╚══════════════════════════════════════════════╝");
             Console.WriteLine();
         }
 
-        Console.WriteLine($"{bookings.Count + 1}. Go Back");
+        Console.WriteLine($"{visibleBookings.Count + 1}. Go Back");
 
-        int choice = ReadIntInRange("Select a booking: ", 1, bookings.Count + 1);
+        int choice = ReadIntInRange("Select a booking: ", 1, visibleBookings.Count + 1);
 
-        if (choice == bookings.Count + 1)
+        if (choice == visibleBookings.Count + 1)
             return;
 
-        ShowBookingOptions(user, bookings[choice - 1]);
+        ShowBookingOptions(user, visibleBookings[choice - 1]);
     }
 
     private void ShowMyReviewComments(User user)
