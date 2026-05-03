@@ -22,7 +22,7 @@ public class Profile
             Console.WriteLine($"Please enter a valid number between {min} and {max}.");
         }
     }
-    
+
     private List<string> SplitText(string text, int maxLength)
     {
         var words = text.Split(' ');
@@ -45,7 +45,7 @@ public class Profile
 
         return lines;
     }
-    
+
     private void DisplayEventCard(IEvent e, int index)
     {
         Console.WriteLine("╔══════════════════════════════════════════════╗");
@@ -135,7 +135,7 @@ public class Profile
 
         if (choice == user.Host.Count + 1)
             return;
-        
+
         ShowHostOptions(user, (BaseEvent)user.Host[choice - 1]);
     }
 
@@ -178,7 +178,7 @@ public class Profile
         }
     }
 
-    private void UpdateEvent (BaseEvent @event)
+    private void UpdateEvent(BaseEvent @event)
     {
         Console.WriteLine("Enter new title (leave blank to keep current):");
         string? title = Console.ReadLine();
@@ -195,31 +195,33 @@ public class Profile
         Console.WriteLine("Event updated.");
         Console.ReadLine();
     }
-    
-    private void LeaveEvent(User user, BaseEvent @event)
-    {
-        var booking = user.Purchases
-            .FirstOrDefault(b => b.Event == @event && b.Status == BookingStatus.Confirmed);
 
-        if (booking == null)
+    private void LeaveEvent(User user, Booking booking)
+    {
+        if (booking.Status == BookingStatus.Cancelled)
         {
-            Console.WriteLine("You have no active booking for this event.");
+            Console.WriteLine("This booking is already cancelled.");
             Console.ReadLine();
             return;
         }
 
         try
         {
-            _controller.CancelBooking(user, booking);
-            Console.WriteLine("Your booking has been cancelled and your ticket has been returned.");
+            booking.Cancel();
+
+            booking.Event.RemoveParticipant(user);
+            user.Attending.Remove(booking.Event);
+
+            Console.WriteLine("Your booking has been cancelled and your ticket has been refunded.");
         }
-        catch (InvalidOperationException e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e.Message);
+            Console.WriteLine(ex.Message);
         }
+
         Console.ReadLine();
     }
-    
+
     private void WriteReview(User user, BaseEvent @event)
     {
         if (@event.Host == user)
@@ -242,7 +244,7 @@ public class Profile
             Console.ReadLine();
             return;
         }
-        
+
         bool alreadyReviewed = @event.Reviews.Any(r => r.Author == user);
 
         if (alreadyReviewed)
@@ -270,13 +272,17 @@ public class Profile
         Console.WriteLine("Review submitted!");
         Console.ReadLine();
     }
-    
-    private void ShowBookingOptions(User user, BaseEvent @event)
+
+    private void ShowBookingOptions(User user, Booking booking)
     {
         Console.Clear();
 
-        Console.WriteLine($"{@event.Title}");
-        Console.WriteLine($"{@event.Location}");
+        var e = booking.Event;
+
+        Console.WriteLine($"{e.Title}");
+        Console.WriteLine($"{e.Location}");
+        Console.WriteLine($"Ticket: {booking.TicketType.Name}");
+        Console.WriteLine($"Status: {booking.Status}");
         Console.WriteLine();
 
         Console.WriteLine("1. Leave Event");
@@ -287,8 +293,8 @@ public class Profile
 
         switch (choice)
         {
-            case 1: LeaveEvent(user, @event); break;
-            case 2: WriteReview(user, @event); break;
+            case 1: LeaveEvent(user, booking); break;
+            case 2: WriteReview(user, e as BaseEvent); break;
             default: return;
         }
     }
@@ -296,30 +302,45 @@ public class Profile
     private void ShowMyBookings(User user)
     {
         Console.Clear();
-        Console.WriteLine("ATTENDING EVENTS:");
+        Console.WriteLine("MY BOOKINGS:\n");
 
-        if (!user.Attending.Any())
+        var bookings = user.Purchases
+            .Where(b => b.Status == BookingStatus.Confirmed)
+            .ToList();
+
+        if (!bookings.Any())
         {
-            Console.WriteLine("No events attending.\n");
+            Console.WriteLine("No bookings found.\n");
             Console.ReadLine();
             return;
         }
 
-        for (int i = 0; i < user.Attending.Count; i++)
+        for (int i = 0; i < bookings.Count; i++)
         {
-            var t = user.Attending[i];
-            t.UpdateStatus();
-            DisplayEventCard(t, i + 1);
+            var b = bookings[i];
+            var e = b.Event;
+
+            Console.WriteLine("╔══════════════════════════════════════════════╗");
+            Console.WriteLine($"║ {i + 1,2}. {e.Title,-36}║");
+            Console.WriteLine("╠══════════════════════════════════════════════╣");
+            Console.WriteLine($"║ Ticket: {b.TicketType.Name,-34}║");
+            Console.WriteLine($"║ Price:  {b.PriceAtBooking:N0} kr║");
+            Console.WriteLine($"║ Booked: {b.BookedAt:dd MMM yyyy}║");
+            Console.WriteLine($"║ Booking Status: {b.Status,-34}║");
+            Console.WriteLine($"║ Ref:    {b.Reference,-34}║");
+            Console.WriteLine($"║ Place:  {e.Location,-36}║");
+            Console.WriteLine("╚══════════════════════════════════════════════╝");
+            Console.WriteLine();
         }
 
-        Console.WriteLine($"{user.Attending.Count + 1}. Go Back");
+        Console.WriteLine($"{bookings.Count + 1}. Go Back");
 
-        int choice = ReadIntInRange("Select an event: ", 1, user.Attending.Count + 1);
+        int choice = ReadIntInRange("Select a booking: ", 1, bookings.Count + 1);
 
-        if (choice == user.Attending.Count + 1)
+        if (choice == bookings.Count + 1)
             return;
-        
-        ShowBookingOptions(user,(BaseEvent)user.Attending[choice - 1]);
+
+        ShowBookingOptions(user, bookings[choice - 1]);
     }
 
     private void ShowMyReviewComments(User user)
