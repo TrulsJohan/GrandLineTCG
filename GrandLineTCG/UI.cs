@@ -194,51 +194,98 @@ public class UI
     }
     
     private void HandleCreateTournament()
+{
+    string title = ReadRequiredString("Title: ");
+    string description = ReadRequiredString("Description: ");
+    string location = ReadRequiredString("Location: ");
+
+    ListingType gameTypes = ReadEnum<ListingType>("Game Types: ");
+    TournamentType tournamentType = ReadEnum<TournamentType>("Tournament Type: ");
+    PrizeType prizeType = ReadEnum<PrizeType>("Prize Type: ");
+
+    string prizeDescription = prizeType switch
     {
-        string title = ReadRequiredString("Title: ");
-        string description = ReadRequiredString("Description: ");
-        string location = ReadRequiredString("Location: ");
-        ListingType gameTypes = ReadEnum<ListingType>("Game Types: ");
-        TournamentType tournamentType = ReadEnum<TournamentType>("Tournament Type: ");
-        PrizeType prizeType = ReadEnum<PrizeType>("Prize Type: ");
-        string prizeDescription = prizeType switch
-        {
-            PrizeType.Cash => $"{ReadIntInRange("Prize amount (kr): ", 0, int.MaxValue)} kr",
-            PrizeType.Products => ReadRequiredString("Describe the prize (e.g. Packs, Trophy"),
-            PrizeType.Honor => "Honor and glory!",
-            PrizeType.Mixed => ReadRequiredString("Describe the prize (e.g. 500kr + 3 Packs"),
-            _ => string.Empty
-        }; 
-        Ruleset ruleset = ReadEnum<Ruleset>("Ruleset: ");
-        DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
+        PrizeType.Cash => $"{ReadIntInRange("Prize amount (kr): ", 0, int.MaxValue)} kr",
+        PrizeType.Products => ReadRequiredString("Describe the prize (e.g. Packs, Trophy"),
+        PrizeType.Honor => "Honor and glory!",
+        PrizeType.Mixed => ReadRequiredString("Describe the prize (e.g. 500kr + 3 Packs"),
+        _ => string.Empty
+    };
 
-        Console.WriteLine("\nNow set the price and quantity for each ticket type:");
-        var ticketPrices = new Dictionary<string, (int price, int quantity)>();
-        string[] ticketNames = { "Early Bird", "Standard", "VIP" };
-        foreach (var name in ticketNames)
-        {
-            Console.WriteLine($"\n{name} ticket:");
-            int ticketPrice = ReadIntInRange("Price: ", 0, int.MaxValue);
-            int quantity = ReadIntInRange("Quantity: ", 1, int.MaxValue);
-            ticketPrices[name] = (ticketPrice, quantity);
-        }
+    Ruleset ruleset = ReadEnum<Ruleset>("Ruleset: ");
+    DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
 
-        var tournament = _controller.CreateTournament(
+    Console.WriteLine("\nNow set the price and quantity for each ticket type:");
+    var ticketPrices = new Dictionary<string, (int price, int quantity)>();
+    string[] ticketNames = { "Early Bird", "Standard", "VIP" };
+
+    foreach (var name in ticketNames)
+    {
+        Console.WriteLine($"\n{name} ticket:");
+        int ticketPrice = ReadIntInRange("Price: ", 0, int.MaxValue);
+        int quantity = ReadIntInRange("Quantity: ", 1, int.MaxValue);
+
+        ticketPrices[name] = (ticketPrice, quantity);
+    }
+
+    var tournament = _controller.CreateTournament(
+        _currentUser!,
+        title,
+        description,
+        location,
+        gameTypes,
+        tournamentType,
+        prizeType,
+        prizeDescription,
+        ruleset,
+        eventDate);
+
+    foreach (var (name, info) in ticketPrices)
+    {
+        _controller.AddTicketType(
             _currentUser!,
-            title,
-            description,
-            location,
-            gameTypes,
-            tournamentType,
-            prizeType,
-            prizeDescription,
-            ruleset,
-            eventDate);
+            tournament,
+            name,
+            info.price,
+            info.quantity,
+            TicketCategory.Visitor
+        );
+    }
 
-        foreach (var (name, info) in ticketPrices)
-            _controller.AddTicketType(_currentUser!, tournament, name, info.price, info.quantity);
+    Console.WriteLine("Tournament created successfully.");
+}
+    
+    private void CreateVendorTicket(IEvent @event, int vendorSlots)
+    {
+        Console.WriteLine("\nVendor ticket:");
+        int price = ReadIntInRange("Price: ", 0, int.MaxValue);
 
-        Console.WriteLine("Tournament created successfully.");
+        Console.WriteLine($"Quantity automatically set to Vendor Slots: {vendorSlots}");
+
+        _controller.AddTicketType(
+            _currentUser!,
+            @event,
+            "Vendor",
+            price,
+            vendorSlots,
+            TicketCategory.Vendor
+        );
+    }
+    
+    private void CreateVisitorTicket(IEvent @event)
+    {
+        Console.WriteLine("\nVisitor ticket:");
+        int price = ReadIntInRange("Price: ", 0, int.MaxValue);
+        int quantity = ReadIntInRange("Quantity: ", 1, int.MaxValue);
+
+        _controller.AddTicketType(
+            _currentUser!,
+            @event,
+            "Visitor",
+            price,
+            quantity,
+            TicketCategory.Visitor
+        );
     }
 
     private void HandleCreateTradingEvent()
@@ -246,34 +293,43 @@ public class UI
         string title = ReadRequiredString("Title: ");
         string description = ReadRequiredString("Description: ");
         string location = ReadRequiredString("Location: ");
-        int price = ReadIntInRange("Entry price: ", 0, int.MaxValue);
-        int tableFee = ReadIntInRange("Table fee: ", 0, int.MaxValue);
+
+        int tableFee = ReadIntInRange("Table fee (vendors): ", 0, int.MaxValue);
         int vendorSlots = ReadIntInRange("Vendor slots: ", 1, 500);
+
         DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
 
         var rarities = new List<CardRarity>();
-        Console.WriteLine("Add allowed rarities (select one at a time, enter 0 when done):");
+
+        Console.WriteLine("Add allowed rarities (0 to finish):");
         while (true)
         {
             CardRarity rarity = ReadEnum<CardRarity>("Rarity: ");
+
             if (!rarities.Contains(rarity))
                 rarities.Add(rarity);
-            Console.WriteLine("Add another rarity? (1 = Yes, 2 = No)");
-            if (ReadIntInRange("Select: ", 1, 2) == 2) break;
+
+            Console.WriteLine("Add another? 1=Yes 2=No");
+            if (ReadIntInRange("Select: ", 1, 2) == 2)
+                break;
         }
 
         var tradingEvent = _controller.CreateTradingEvent(
-            _currentUser!, title, description, location, price,
-            eventDate, tableFee, vendorSlots, rarities);
+            _currentUser!,
+            title,
+            description,
+            location,
+            eventDate,
+            tableFee,
+            vendorSlots,
+            rarities
+        );
 
-        Console.WriteLine("\nNow set the price and quantity for each ticket type:");
-        foreach (var name in new[] { "Vendor", "Visitor" })
-        {
-            Console.WriteLine($"\n{name} ticket:");
-            int ticketPrice = ReadIntInRange("Price: ", 0, int.MaxValue);
-            int quantity    = ReadIntInRange("Quantity: ", 1, int.MaxValue);
-            _controller.AddTicketType(_currentUser!, tradingEvent, name, ticketPrice, quantity);
-        }
+        Console.WriteLine("\n--- Visitor Tickets ---");
+        CreateVisitorTicket(tradingEvent);
+
+        Console.WriteLine("\n--- Vendor Tickets ---");
+        CreateVendorTicket(tradingEvent, vendorSlots);
 
         Console.WriteLine("Trading event created successfully.");
     }
@@ -283,9 +339,6 @@ public class UI
         var profile = new Profile(_controller);
         profile.Display(_currentUser!);
     }
-
-    
-    //browsing, searching and sorting tournaments
     
     private void HandleBrowseEvents()
     {
@@ -337,7 +390,6 @@ public class UI
         };
     }
     
-    //display tournaments list and single tournament
 
     private void ShowEventsTable(List<IEvent> events)
     {

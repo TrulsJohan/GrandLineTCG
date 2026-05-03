@@ -52,11 +52,11 @@ public class Profile
         Console.WriteLine($"║ {index,2}. {e.Title,-36}║");
         Console.WriteLine("╠══════════════════════════════════════════════╣");
         Console.WriteLine($"║ Status: {e.Status,-36}║");
-        Console.WriteLine($"║ Slots:  {e.ParticipantsCount}/{e.MaxCapacity,-30}║");
         Console.WriteLine($"║ Place:  {e.Location,-36}║");
 
         if (e is Tournament t)
         {
+            Console.WriteLine($"║ Slots:  {e.ParticipantsCount}/{e.MaxCapacity,-30}║");
             Console.WriteLine($"║ Game:   {t.GameType,-36}║");
             Console.WriteLine($"║ Type:   {t.Type,-36}║");
             Console.WriteLine($"║ Prize:  {t.Prize} ({t.PrizeType})".PadRight(47) + "║");
@@ -66,8 +66,28 @@ public class Profile
         {
             Console.WriteLine($"║ Table fee:    {te.TableFee:N0} kr".PadRight(47) + "║");
             Console.WriteLine($"║ Vendor slots: {te.VendorSlots,-26}║");
+
             var rarities = string.Join(", ", te.AllowedRarities);
             Console.WriteLine($"║ Rarities: {rarities,-32}║");
+            
+            var visitor = te.TicketTypes
+                .FirstOrDefault(t => t.Category == TicketCategory.Visitor);
+
+            if (visitor != null)
+            {
+                int sold = visitor.Quantity - visitor.Remaining;
+                Console.WriteLine($"║ Visitor: {visitor.Price:N0} kr | Sold: {sold} | Left: {visitor.Remaining}║");
+            }
+            
+            var vendor = te.TicketTypes
+                .FirstOrDefault(t => t.Category == TicketCategory.Vendor);
+
+            if (vendor != null)
+            {
+                int used = vendor.Quantity - vendor.Remaining;
+                Console.WriteLine($"║ Vendor:  {vendor.Price:N0} kr | Used slots: {used}/{te.VendorSlots}║");
+            }
+
             Console.WriteLine($"║ Rating: {te.AverageRating:F1}/5 ({te.Reviews.Count} reviews)║");
         }
 

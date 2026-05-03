@@ -28,14 +28,30 @@ public class Controller
         return user;
     }
 
-    public TradingEvent CreateTradingEvent(User host, string title, string description,
-        string location, decimal price, DateTime eventDate,
-        decimal tableFee, int vendorSlots, List<CardRarity> allowedRarities)
+    public TradingEvent CreateTradingEvent(
+        User host,
+        string title,
+        string description,
+        string location,
+        DateTime eventDate,
+        decimal tableFee,
+        int vendorSlots,
+        List<CardRarity> allowedRarities)
     {
-        var tradeEvent = new TradingEvent(host, title, description, location,
-            price, eventDate, tableFee, vendorSlots, allowedRarities);
+        var tradeEvent = new TradingEvent(
+            host,
+            title,
+            description,
+            location,
+            eventDate,
+            tableFee,
+            vendorSlots,
+            allowedRarities
+        );
+
         host.Host.Add(tradeEvent);
         _tradeEvents.Add(tradeEvent);
+
         return tradeEvent;
     }
 
@@ -129,13 +145,13 @@ public class Controller
         
         baseEvent.Participants.Clear();
     }
-
-    public void AddTicketType(User user, IEvent @event, string name, decimal price, int quantity)
+    
+    public void AddTicketType(User user, IEvent @event, string name, decimal price, int quantity, TicketCategory category)
     {
         if (@event.Host != user)
             throw new InvalidOperationException("Only the host can add a ticket type.");
-        var ticketType = new TicketType(name, price, quantity);
+
+        var ticketType = new TicketType(name, price, quantity, category);
         @event.TicketTypes.Add(ticketType);
     }
-    
 }
