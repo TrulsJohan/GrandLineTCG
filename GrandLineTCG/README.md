@@ -67,6 +67,7 @@ AI Prompts Used (summary):
 - Can you make this Readme.md file look prettier, and correct spelling errors.
 - Is there any other enums I could add to this list (Attached the current list of enums)
 - Can you help make UML documentation for each function
+- Here is my sprint report, can you help me make it look structured and easier to read?
 
 ## Requirements
 All project requirements can be found at Gokstad Akademiet - Arbeidskrav 3
