@@ -9,7 +9,9 @@ public class Tournament :BaseEvent
     public MaxParticipants MaxParticipants { get; set; }
     public decimal Prize { get; set; }
 
-    public override int MaxCapacity => (int)MaxParticipants;
+    public override int MaxCapacity => TicketTypes.Any()
+        ? TicketTypes.Sum(ticket => ticket.Quantity)
+        : 0;
 
     public Tournament(
         User host,
