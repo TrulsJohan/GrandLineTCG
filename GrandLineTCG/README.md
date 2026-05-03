@@ -9,6 +9,10 @@
 - Fillip
 - Berken
 
+## Links
+- Github Repo (https://github.com/TrulsJohan/GrandLineTCG)
+- Github Board (https://github.com/users/TrulsJohan/projects/16/views/1)
+
 ## Project Description
 
 This is a console-based **Tournament Management Platform** developed in C#. 
