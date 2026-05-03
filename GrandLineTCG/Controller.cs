@@ -43,13 +43,11 @@ public class Controller
         User host,
         string title, 
         string description, 
-        string location, 
-        int price,  
+        string location,
         ListingType gameTypes, 
         TournamentType tournamentType, 
         PrizeType prizeType, 
-        Ruleset ruleset, 
-        MaxParticipants maxParticipants,
+        Ruleset ruleset,
         DateTime eventDate)
     {
         var tournament = new Tournament(
@@ -57,12 +55,10 @@ public class Controller
             title,
             description,
             location,
-            price,
             gameTypes,
             tournamentType,
             prizeType,
             ruleset,
-            maxParticipants,
             eventDate);
         host.Host.Add(tournament);
         _tournaments.Add(tournament);
