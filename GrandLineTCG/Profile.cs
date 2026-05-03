@@ -113,11 +113,11 @@ public class Profile
     private void ShowMyEvents(User user)
     {
         Console.Clear();
-        Console.WriteLine("HOSTED TOURNAMENTS:");
+        Console.WriteLine("HOSTED EVENTS:");
 
         if (!user.Host.Any())
         {
-            Console.WriteLine("No tournaments hosted yet.\n");
+            Console.WriteLine("No events hosted yet.\n");
             Console.ReadLine();
             return;
         }
@@ -131,12 +131,11 @@ public class Profile
 
         Console.WriteLine($"{user.Host.Count + 1}. Go Back");
 
-        int choice = ReadIntInRange("Select a tournament: ", 1, user.Host.Count + 1);
+        int choice = ReadIntInRange("Select a event: ", 1, user.Host.Count + 1);
 
         if (choice == user.Host.Count + 1)
             return;
-
-        var selectedTournament = user.Host[choice - 1];
+        
         ShowHostOptions(user, (BaseEvent)user.Host[choice - 1]);
     }
 
@@ -164,8 +163,8 @@ public class Profile
             case 2:
                 try
                 {
-                    _controller.CancelTournament(user, @event);
-                    Console.WriteLine("Tournament cancelled successfully.");
+                    _controller.CancelEvent(user, @event);
+                    Console.WriteLine("Event cancelled successfully.");
                 }
                 catch (Exception ex)
                 {
@@ -193,7 +192,7 @@ public class Profile
         if (!string.IsNullOrWhiteSpace(description))
             @event.Description = description;
 
-        Console.WriteLine("Tournament updated.");
+        Console.WriteLine("Event updated.");
         Console.ReadLine();
     }
     
@@ -232,7 +231,7 @@ public class Profile
 
         if (!user.Attending.Contains(@event))
         {
-            Console.WriteLine("You can only review tournaments you attended.");
+            Console.WriteLine("You can only review events you attended.");
             Console.ReadLine();
             return;
         }
@@ -248,7 +247,7 @@ public class Profile
 
         if (alreadyReviewed)
         {
-            Console.WriteLine("You have already reviewed this tournament.");
+            Console.WriteLine("You have already reviewed this event.");
             Console.ReadLine();
             return;
         }
@@ -280,7 +279,7 @@ public class Profile
         Console.WriteLine($"{@event.Location}");
         Console.WriteLine();
 
-        Console.WriteLine("1. Leave Tournament");
+        Console.WriteLine("1. Leave Event");
         Console.WriteLine("2. Write Review");
         Console.WriteLine("3. Go Back");
 
@@ -297,11 +296,11 @@ public class Profile
     private void ShowMyBookings(User user)
     {
         Console.Clear();
-        Console.WriteLine("ATTENDING TOURNAMENTS:");
+        Console.WriteLine("ATTENDING EVENTS:");
 
         if (!user.Attending.Any())
         {
-            Console.WriteLine("No tournaments attending.\n");
+            Console.WriteLine("No events attending.\n");
             Console.ReadLine();
             return;
         }
@@ -315,12 +314,11 @@ public class Profile
 
         Console.WriteLine($"{user.Attending.Count + 1}. Go Back");
 
-        int choice = ReadIntInRange("Select a tournament: ", 1, user.Attending.Count + 1);
+        int choice = ReadIntInRange("Select an event: ", 1, user.Attending.Count + 1);
 
         if (choice == user.Attending.Count + 1)
             return;
-
-        var selectedEvent = user.Attending[choice - 1];
+        
         ShowBookingOptions(user,(BaseEvent)user.Attending[choice - 1]);
     }
 

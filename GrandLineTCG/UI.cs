@@ -1,5 +1,3 @@
-using System.ComponentModel.Design;
-using System.Runtime.InteropServices;
 using GrandLineTCG.interfaces;
 
 namespace GrandLineTCG;
@@ -122,8 +120,8 @@ public class UI
         switch (choice)
         {
             case 1: HandleCreateEvent(); break;
-            case 2: HandleBrowseTournaments(); break;
-            case 3: HandleSearchTournaments(); break;
+            case 2: HandleBrowseEvents(); break;
+            case 3: HandleSearchEvents(); break;
             case 4: HandleProfile(); break;
             case 5:     
                 Console.WriteLine("Goodbye!");
@@ -170,6 +168,20 @@ public class UI
 
     private void HandleCreateEvent()
     {
+        Console.WriteLine("What type of event would you like to create?");
+        Console.WriteLine("1. Tournament");
+        Console.WriteLine("2. Trading Event");
+
+        int choice = ReadIntInRange("Select: ", 1, 2);
+
+        if (choice == 1)
+            HandleCreateTournament();
+        else
+            HandleCreateTradingEvent();   
+    }
+    
+    private void HandleCreateTournament()
+    {
         string title = ReadRequiredString("Title: ");
         string description = ReadRequiredString("Description: ");
         string location = ReadRequiredString("Location: ");
@@ -211,6 +223,43 @@ public class UI
         Console.WriteLine("Tournament created successfully.");
     }
 
+    private void HandleCreateTradingEvent()
+    {
+        string title = ReadRequiredString("Title: ");
+        string description = ReadRequiredString("Description: ");
+        string location = ReadRequiredString("Location: ");
+        int price = ReadIntInRange("Entry price: ", 0, int.MaxValue);
+        int tableFee = ReadIntInRange("Table fee: ", 0, int.MaxValue);
+        int vendorSlots = ReadIntInRange("Vendor slots: ", 1, 500);
+        DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
+
+        var rarities = new List<CardRarity>();
+        Console.WriteLine("Add allowed rarities (select one at a time, enter 0 when done):");
+        while (true)
+        {
+            CardRarity rarity = ReadEnum<CardRarity>("Rarity: ");
+            if (!rarities.Contains(rarity))
+                rarities.Add(rarity);
+            Console.WriteLine("Add another rarity? (1 = Yes, 2 = No)");
+            if (ReadIntInRange("Select: ", 1, 2) == 2) break;
+        }
+
+        var tradingEvent = _controller.CreateTradingEvent(
+            _currentUser!, title, description, location, price,
+            eventDate, tableFee, vendorSlots, rarities);
+
+        Console.WriteLine("\nNow set the price and quantity for each ticket type:");
+        foreach (var name in new[] { "Vendor", "Visitor" })
+        {
+            Console.WriteLine($"\n{name} ticket:");
+            int ticketPrice = ReadIntInRange("Price: ", 0, int.MaxValue);
+            int quantity    = ReadIntInRange("Quantity: ", 1, int.MaxValue);
+            _controller.AddTicketType(_currentUser!, tradingEvent, name, ticketPrice, quantity);
+        }
+
+        Console.WriteLine("Trading event created successfully.");
+    }
+
     private void HandleProfile()
     {
         var profile = new Profile(_controller);
@@ -220,117 +269,142 @@ public class UI
     
     //browsing, searching and sorting tournaments
     
-    private void HandleBrowseTournaments()
+    private void HandleBrowseEvents()
     {
         Console.WriteLine("1. Browse All Listings");
         Console.WriteLine("2. Filter By Category");
 
         int choice = ReadIntInRange("Select an option: ", 1, 2);
 
-        List<Tournament> tournaments = _controller.GetAllTournaments();
+        List<IEvent> events = _controller.GetAllEvents();
         if (choice == 2)
         {
-            tournaments = HandleFilterTournaments(tournaments);
+            events = HandleFilterEvents(events);
         }
 
-        ShowTournamentsTable(tournaments);
+        ShowEventsTable(events);
     }
     
-    private List<Tournament> HandleFilterTournaments(List<Tournament> tournaments)
+    private List<IEvent> HandleFilterEvents(List<IEvent> events)
     {
-        Console.WriteLine();
-        Console.WriteLine("Filter by:");
-        Console.WriteLine("1. Game type");
-        Console.WriteLine("2. Tournament type");
-        Console.WriteLine("3. Status");
-        Console.WriteLine("4. Prize type");
-        Console.WriteLine("5. Ruleset");
-        Console.WriteLine("6. Max participants");
+        Console.WriteLine("\nFilter by:");
+        Console.WriteLine("1. Event type (Tournament / Trading)");
+        Console.WriteLine("2. Status");
+        Console.WriteLine("3. Game type      (tournaments only)");
+        Console.WriteLine("4. Prize type     (tournaments only)");
+        Console.WriteLine("5. Ruleset        (tournaments only)");
+        Console.WriteLine("6. Max participants (tournaments only)");
 
         int choice = ReadIntInRange("Select an option: ", 1, 6);
 
         return choice switch
         {
-            1 => tournaments.Where(t => t.GameType   == ReadEnum<ListingType>("Select game type:")).ToList(),
-            2 => tournaments.Where(t => t.Type       == ReadEnum<TournamentType>("Select tournament type:")).ToList(),
-            3 => tournaments.Where(t => t.Status     == ReadEnum<EventStatus>("Select status:")).ToList(),
-            4 => tournaments.Where(t => t.PrizeType  == ReadEnum<PrizeType>("Select prize type:")).ToList(),
-            5 => tournaments.Where(t => t.Ruleset    == ReadEnum<Ruleset>("Select ruleset:")).ToList(),
-            6 => tournaments.Where(t =>t.MaxParticipants == ReadEnum<MaxParticipants>("Select Max Participants:")).ToList()
+            1 => ReadIntInRange("1. Tournament  2. Trading Event", 1, 2) == 1
+                ? events.OfType<Tournament>().Cast<IEvent>().ToList()
+                : events.OfType<TradingEvent>().Cast<IEvent>().ToList(),
+            2 => events.Where(e => e.Status == ReadEnum<EventStatus>("Select status:")).ToList(),
+            3 => events.OfType<Tournament>()
+                .Where(t => t.GameType == ReadEnum<ListingType>("Select game type:"))
+                .Cast<IEvent>().ToList(),
+            4 => events.OfType<Tournament>()
+                .Where(t => t.PrizeType == ReadEnum<PrizeType>("Select prize type:"))
+                .Cast<IEvent>().ToList(),
+            5 => events.OfType<Tournament>()
+                .Where(t => t.Ruleset == ReadEnum<Ruleset>("Select ruleset:"))
+                .Cast<IEvent>().ToList(),
+            6 => events.OfType<Tournament>()
+                .Where(t => t.MaxParticipants == ReadEnum<MaxParticipants>("Select max participants:"))
+                .Cast<IEvent>().ToList(),
+            _ => events
         };
     }
     
     //display tournaments list and single tournament
 
-    private void ShowTournamentsTable(List<Tournament> tournaments)
+    private void ShowEventsTable(List<IEvent> events)
     {
-        if (tournaments.Count == 0)
+        if (events.Count == 0)
         {
-            Console.WriteLine("There are no tournaments in the list.");
+            Console.WriteLine("There are no events in the list.");
         }
 
         Console.WriteLine();
         Console.WriteLine(
-            $"{"#",4} {"Title",-25} {"Host",-15} {"Location",-15} {"Type",-14} {"Status",-12} {"Prize",8}");
+            $"{"#",4} {"Title",-25} {"Host",-15} {"Location",-15} {"Kind",-14} {"Status",-12} {"Info",10}");
         Console.WriteLine(new string('-', 97));
 
-        for (int i = 0; i < tournaments.Count; i++)
+        for (int i = 0; i < events.Count; i++)
         {
-            var t = tournaments[i];
-            string prize = t.PrizeType == PrizeType.Cash ? $"{t.Prize:N0} kr" : t.PrizeType.ToString();
+            var e = events[i];
+            string kind = e is Tournament ? "Tournament" : "Trading";
+            string info = e is Tournament t
+                ? (t.PrizeType == PrizeType.Cash ? $"{t.Prize:N0} kr" : t.PrizeType.ToString())
+                : e is TradingEvent te ? $"Fee {te.TableFee:N0} kr" : "-";
+
             Console.WriteLine(
-                $"{i + 1,-4} {t.Title,-25} {t.Host.Username,-15} {t.Location,-15} {t.Type,-14} {t.Status,-12} {prize,8}");
+                $"{i + 1,-4} {e.Title,-25} {e.Host.Username,-15} {e.Location,-15} {kind,-14} {e.Status,-12} {info,10}");
         }
 
         Console.WriteLine();
-        int choice = ReadIntInRange("Select a listing to view (press 0 to go back): ", 0, tournaments.Count);
+        int choice = ReadIntInRange("Select a listing to view (press 0 to go back): ", 0, events.Count);
         if (choice == 0)
         {
             Console.WriteLine("No listings found!");
             return;
         }
 
-        ShowTournamentDetails(tournaments[choice - 1]);
+        ShowEventDetails((BaseEvent)events[choice - 1]);
     }
     
-    private void ShowTournamentDetails(Tournament tournament)
+    private void ShowEventDetails(BaseEvent @event)
     {
-        Console.WriteLine($"Title:        {tournament.Title}");
-        Console.WriteLine($"Host:         {tournament.Host.Username}");
-        Console.WriteLine($"Location:     {tournament.Location}");
-        Console.WriteLine($"Type:         {tournament.Type}");
-        Console.WriteLine($"Game:         {tournament.GameType}");
-        Console.WriteLine($"Ruleset:      {tournament.Ruleset}");
-        Console.WriteLine($"Status:       {tournament.Status}");
-        Console.WriteLine($"Prize:        {tournament.Prize:N0} kr ({tournament.PrizeType})");
-        Console.WriteLine($"Max players:  {(int)tournament.MaxParticipants}");
-        Console.WriteLine($"Participants: {tournament.ParticipantsCount}/{(int)tournament.MaxParticipants}");
-        Console.WriteLine($"Slots:        {tournament.SlotStatus}");
-        Console.WriteLine($"Description:  {tournament.Description}");
+        Console.WriteLine($"Title:        {@event.Title}");
+        Console.WriteLine($"Host:         {@event.Host.Username}");
+        Console.WriteLine($"Location:     {@event.Location}");
+        Console.WriteLine($"Status:       {@event.Status}");
+        Console.WriteLine($"Participants: {@event.ParticipantsCount}/{@event.MaxCapacity}");
+        Console.WriteLine($"Slots:        {@event.SlotStatus}");
+        Console.WriteLine($"Date:         {@event.EventDate:dd MMM yyyy HH:mm}");
+        Console.WriteLine($"Description:  {@event.Description}");
+
+        if (@event is Tournament t)
+        {
+            Console.WriteLine($"Game:         {t.GameType}");
+            Console.WriteLine($"Type:         {t.Type}");
+            Console.WriteLine($"Ruleset:      {t.Ruleset}");
+            Console.WriteLine($"Prize:        {t.Prize:N0} kr ({t.PrizeType})");
+        }
+        else if (@event is TradingEvent te)
+        {
+            Console.WriteLine($"Table fee:    {te.TableFee:N0} kr");
+            Console.WriteLine($"Vendor slots: {te.VendorSlots}");
+            Console.WriteLine($"Rarities:     {string.Join(", ", te.AllowedRarities)}");
+        }
+
         Console.WriteLine();
 
-        bool isOwnTournament = tournament.Host.Username == _currentUser!.Username;
-        if (isOwnTournament)
+        bool isOwn = @event.Host.Username == _currentUser!.Username;
+        if (isOwn)
         {
-            Console.WriteLine("1. Cancel tournament");
+            Console.WriteLine("1. Cancel event");
             Console.WriteLine("2. Go back");
             int choice = ReadIntInRange("Select an option: ", 1, 2);
             if (choice == 1)
-                _controller.CancelTournament(_currentUser!, tournament);
+                _controller.CancelEvent(_currentUser!, @event);
             return;
         }
 
-        Console.WriteLine("1. Join tournament");
+        Console.WriteLine("1. Join event");
         Console.WriteLine("2. Go back");
         int joinChoice = ReadIntInRange("Select an option: ", 1, 2);
         if (joinChoice == 1)
         {
             try
             {
-                var ticketType = SelectTicketType(tournament);
+                var ticketType = SelectTicketType(@event);
                 if (ticketType == null) return;
 
-                var booking = _controller.BookEvent(_currentUser!, tournament, ticketType);
+                var booking = _controller.BookEvent(_currentUser!, @event, ticketType);
                 Console.WriteLine("Booking confirmed!");
                 Console.WriteLine($"Reference: {booking.Reference}");
                 Console.WriteLine($"Ticket:    {booking.TicketType.Name}");
@@ -344,12 +418,12 @@ public class UI
         }
     }
     
-    private void HandleSearchTournaments()
+    private void HandleSearchEvents()
     {
         Console.WriteLine("Search listings");
         string searchTerm = ReadRequiredString("Search Term: ");
         
-        var tournaments = _controller.SearchTournaments(searchTerm);
-        ShowTournamentsTable(tournaments);
+        var events = _controller.SearchEvents(searchTerm);
+        ShowEventsTable(events);
     }
 }
