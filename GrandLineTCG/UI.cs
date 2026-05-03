@@ -198,12 +198,10 @@ public class UI
         string title = ReadRequiredString("Title: ");
         string description = ReadRequiredString("Description: ");
         string location = ReadRequiredString("Location: ");
-        int price = ReadIntInRange("Price: ", 0, int.MaxValue);
         ListingType gameTypes = ReadEnum<ListingType>("Game Types: ");
         TournamentType tournamentType = ReadEnum<TournamentType>("Tournament Type: ");
         PrizeType prizeType = ReadEnum<PrizeType>("Prize Type: ");
         Ruleset ruleset = ReadEnum<Ruleset>("Ruleset: ");
-        MaxParticipants maxParticipants = ReadEnum<MaxParticipants>("Max Participants: ");
         DateTime eventDate = ReadEventDate("Event Date (yyyy-MM-dd HH:mm): ");
 
         Console.WriteLine("\nNow set the price and quantity for each ticket type:");
@@ -222,12 +220,10 @@ public class UI
             title,
             description,
             location,
-            price,
             gameTypes,
             tournamentType,
             prizeType,
             ruleset,
-            maxParticipants,
             eventDate);
 
         foreach (var (name, info) in ticketPrices)
@@ -326,7 +322,7 @@ public class UI
                 .Where(t => t.Ruleset == ReadEnum<Ruleset>("Select ruleset:"))
                 .Cast<IEvent>().ToList(),
             6 => events.OfType<Tournament>()
-                .Where(t => t.MaxParticipants == ReadEnum<MaxParticipants>("Select max participants:"))
+                .Where(t => t.MaxCapacity == (int)ReadEnum<MaxParticipants>("Select max participants:"))
                 .Cast<IEvent>().ToList(),
             _ => events
         };
