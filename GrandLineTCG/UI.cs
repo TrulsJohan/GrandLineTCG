@@ -74,19 +74,32 @@ public class UI
 
     private TicketType? SelectTicketType(IEvent @event)
     {
-        var available = @event.TicketTypes.Where(t => t.IsAvailable).ToList();
-
-        if (!available.Any())
+        if (!@event.TicketTypes.Any())
         {
             Console.WriteLine("No ticket types available.");
             return null;
         }
-        
+
         Console.WriteLine("Available ticket types:");
-        for (int i = 0; i < available.Count; i++)
-            Console.WriteLine($"{i + 1}. {available[i].Name} - {available[i].Price:N0} kr ({available[i].Remaining} remaining)");
-        int choice = ReadIntInRange("Select a ticket type: ", 1, available.Count);
-        return available[choice - 1];
+        for (int i = 0; i < @event.TicketTypes.Count; i++)
+        {
+            var t = @event.TicketTypes[i];
+            if (t.IsAvailable)
+                Console.WriteLine($"{i + 1}. {t.Name} — {t.Price:N0} kr ({t.Remaining} remaining)");
+            else
+                Console.WriteLine($"{i + 1}. {t.Name} — SOLD OUT");
+        }
+
+        int choice = ReadIntInRange("Select a ticket type: ", 1, @event.TicketTypes.Count);
+        var selected = @event.TicketTypes[choice - 1];
+
+        if (!selected.IsAvailable)
+        {
+            Console.WriteLine("That ticket type is sold out. Please select another.");
+            return null;
+        }
+
+        return selected;
     }
 
     private void ShowGuestMenu()
